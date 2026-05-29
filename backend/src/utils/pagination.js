@@ -1,0 +1,18 @@
+/**
+ * Parse pagination params from query string
+ */
+const getPagination = (query) => {
+  const page = Math.max(1, parseInt(query.page) || 1);
+  const limit = Math.min(100, parseInt(query.limit) || 10);
+  const offset = (page - 1) * limit;
+  return { page, limit, offset };
+};
+
+const getPagingData = (data, page, limit) => ({
+  total: data.count,
+  totalPages: Math.ceil(data.count / limit),
+  currentPage: page,
+  items: data.rows,
+});
+
+module.exports = { getPagination, getPagingData };
