@@ -16,7 +16,9 @@ function dinhDangTien(so) {
 
 export default function BangLuongTrang() {
   const { nguoiDung } = useAuth();
-  const laNhanVien = nguoiDung?.phanQuyen === 'Employee';
+  // Employee và Manager đều xem bảng lương cá nhân; Admin và HR xem toàn bộ
+  const xemCaNhan = nguoiDung?.phanQuyen === 'Employee' || nguoiDung?.phanQuyen === 'Manager';
+  const coQuyenTinhLuong = nguoiDung?.phanQuyen === 'Admin' || nguoiDung?.phanQuyen === 'HR';
 
   const [danhSach, setDanhSach] = useState([]);
   const [dangTai, setDangTai] = useState(true);
@@ -37,8 +39,8 @@ export default function BangLuongTrang() {
   const taiDuLieu = useCallback(async () => {
     setDangTai(true);
     try {
-      const endpoint = laNhanVien ? '/bang-luong/ca-nhan' : '/bang-luong';
-      const params = laNhanVien ? {} : { thang: locThang, nam: locNam };
+      const endpoint = xemCaNhan ? '/bang-luong/ca-nhan' : '/bang-luong';
+      const params = xemCaNhan ? {} : { thang: locThang, nam: locNam };
       const res = await apiClient.get(endpoint, { params });
       setDanhSach(res.data);
     } catch {
@@ -46,7 +48,7 @@ export default function BangLuongTrang() {
     } finally {
       setDangTai(false);
     }
-  }, [laNhanVien, locThang, locNam]);
+  }, [xemCaNhan, locThang, locNam]);
 
   useEffect(() => { taiDuLieu(); }, [taiDuLieu]);
 
@@ -74,7 +76,7 @@ export default function BangLuongTrang() {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h5" fontWeight="bold">Bảng lương</Typography>
-        {!laNhanVien && (
+        {!xemCaNhan && (
           <Button variant="contained" startIcon={<CalculateIcon />} onClick={() => setMoDialogTinhLuong(true)}>
             Tính lương tháng
           </Button>
@@ -84,7 +86,7 @@ export default function BangLuongTrang() {
       {thongBao && <Alert severity="success" onClose={() => setThongBao('')} sx={{ mb: 2 }}>{thongBao}</Alert>}
       {loi && <Alert severity="error" onClose={() => setLoi('')} sx={{ mb: 2 }}>{loi}</Alert>}
 
-      {!laNhanVien && (
+      {!xemCaNhan && (
         <Card sx={{ mb: 2 }}>
           <CardContent>
             <Grid container spacing={2} alignItems="center">

@@ -1,0 +1,39 @@
+# docker-compose.dev.yml
+# Chỉ chạy MySQL trong Docker để phục vụ dev local.
+# Backend và Frontend vẫn chạy bằng: npm run dev
+#
+# Cách dùng:
+#   Bước 1 — Khởi động MySQL:  docker-compose -f docker-compose.dev.yml up -d
+#   Bước 2 — Seed dữ liệu:     npm run seed          (từ thư mục trustty-hrms/)
+#   Bước 3 — Chạy dev:         npm run dev           (từ thư mục trustty-hrms/)
+#
+#   Dừng MySQL:  docker-compose -f docker-compose.dev.yml down
+#   Xóa data:    docker-compose -f docker-compose.dev.yml down -v
+
+version: '3.8'
+
+services:
+  database:
+    image: mysql:8.0
+    container_name: trustty-mysql-dev
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: trustty123
+      MYSQL_DATABASE: QuanLyNhanSu
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    ports:
+      # Expose cổng 3306 ra localhost để backend local kết nối được
+      - "3306:3306"
+    volumes:
+      - mysql_dev_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ptrustty123"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  mysql_dev_data:
+    driver: local

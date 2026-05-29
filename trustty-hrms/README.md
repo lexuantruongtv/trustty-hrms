@@ -40,89 +40,67 @@ trustty-hrms/
 
 ## Hướng dẫn thiết lập và chạy
 
-### Cách 1: Chạy bằng Docker (Khuyến nghị)
+### Cách 1: Dev mode — chạy cả hai cùng lúc (Khuyến nghị khi phát triển)
 
-**Yêu cầu:** Docker Desktop đã được cài đặt và đang chạy.
+Chạy backend + frontend song song bằng **một lệnh duy nhất**, tự động reload khi sửa code.
 
-**Bước 1:** Mở terminal, di chuyển vào thư mục dự án:
+**Yêu cầu:** Node.js >= 18, MySQL 8.0 đang chạy.
+
+**Bước 1:** Cài đặt tất cả dependencies:
 ```bash
 cd trustty-hrms
+npm run install:all
 ```
 
-**Bước 2:** Build và khởi động toàn bộ hệ thống:
+**Bước 2:** Khởi tạo cơ sở dữ liệu (chỉ cần làm một lần):
 ```bash
-docker-compose up --build
+# Tạo bảng
+mysql -u root -p < database/init.sql
+
+# Seed dữ liệu mẫu (tự động băm mật khẩu)
+npm run seed
 ```
 
-Lần đầu chạy sẽ mất 3-5 phút để build image. Các lần sau chạy nhanh hơn.
-
-**Bước 3:** Truy cập ứng dụng:
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:5000/api
-- MySQL: localhost:3306
-
-**Dừng hệ thống:**
+**Bước 3:** Chạy cả backend lẫn frontend cùng lúc:
 ```bash
-docker-compose down
+npm run dev
 ```
 
-**Dừng và xóa toàn bộ dữ liệu:**
+Terminal sẽ hiển thị log màu sắc phân biệt:
+- `[BACKEND]` màu cyan — Node.js/Express tại http://localhost:5000
+- `[FRONTEND]` màu magenta — React tại http://localhost:3000
+
+Khi sửa file `.js` trong `backend/src/` → nodemon tự restart server.
+Khi sửa file trong `frontend/src/` → React Hot Reload cập nhật ngay trên trình duyệt.
+
+---
+
+### Cách 2: Chạy riêng từng service
+
 ```bash
-docker-compose down -v
+# Terminal 1 — Backend
+cd trustty-hrms/backend
+npm run dev
+
+# Terminal 2 — Frontend
+cd trustty-hrms/frontend
+npm start
 ```
 
 ---
 
-### Cách 2: Chạy thủ công (Development)
-
-**Yêu cầu:** Node.js >= 18, MySQL 8.0 đã cài đặt và đang chạy.
-
-#### Bước 1: Thiết lập cơ sở dữ liệu
-
-Đăng nhập MySQL và chạy script khởi tạo:
-```bash
-mysql -u root -p < database/init.sql
-```
-
-#### Bước 2: Cài đặt và chạy Backend
+### Cách 3: Docker (Production / Demo)
 
 ```bash
-# Di chuyển vào thư mục backend
-cd backend
-
-# Cài đặt các package
-npm install
-
-# Sao chép file cấu hình môi trường
-copy .env.example .env   # Windows CMD
-# hoặc: cp .env.example .env  (Linux/Mac)
-
-# Chỉnh sửa .env nếu cần (mật khẩu MySQL, v.v.)
-
-# Chạy server (development với nodemon)
-npm run dev
-
-# Hoặc chạy production
-npm start
+cd trustty-hrms
+docker-compose up --build
 ```
 
-Server sẽ chạy tại: http://localhost:5000
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:5000/api
+- MySQL: localhost:3306
 
-#### Bước 3: Cài đặt và chạy Frontend
-
-Mở terminal mới:
-```bash
-# Di chuyển vào thư mục frontend
-cd frontend
-
-# Cài đặt các package
-npm install
-
-# Chạy development server
-npm start
-```
-
-Ứng dụng sẽ tự động mở tại: http://localhost:3000
+Dừng: `docker-compose down` | Dừng + xóa data: `docker-compose down -v`
 
 ---
 

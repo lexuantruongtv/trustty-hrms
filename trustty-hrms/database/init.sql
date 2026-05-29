@@ -1,3 +1,10 @@
+-- ============================================================
+-- TrustTY HRMS - Script tạo cấu trúc cơ sở dữ liệu (DDL)
+-- Chỉ chứa lệnh tạo bảng, KHÔNG chứa dữ liệu mẫu.
+-- Dữ liệu mẫu được quản lý riêng tại: database/seed-data.js
+-- Để seed dữ liệu, chạy: node database/seed.js
+-- ============================================================
+
 CREATE DATABASE IF NOT EXISTS QuanLyNhanSu CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE QuanLyNhanSu;
 
@@ -151,60 +158,3 @@ CREATE TABLE IF NOT EXISTS BienDongLuong (
   CONSTRAINT PK_BIENDONGLUONG PRIMARY KEY (MaBD),
   CONSTRAINT FK_BDL_NHANVIEN FOREIGN KEY (MaNV) REFERENCES NhanVien(MaNV) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- =============================================
--- DỮ LIỆU MẪU
--- =============================================
-
-INSERT INTO PhongBan (MaPB, TenPB, MoTa) VALUES
-('PB001', 'Ban Giám Đốc', 'Lãnh đạo và điều hành công ty'),
-('PB002', 'Phòng Hành chính - Nhân sự', 'Quản lý nhân sự và hành chính'),
-('PB003', 'Phòng Kế toán', 'Quản lý tài chính và kế toán'),
-('PB004', 'Đội Phát triển (Dev)', 'Lập trình và phát triển phần mềm'),
-('PB005', 'Đội Kiểm thử (QA)', 'Kiểm thử và đảm bảo chất lượng'),
-('PB006', 'Đội Phân tích nghiệp vụ (BA)', 'Phân tích yêu cầu và nghiệp vụ');
-
-INSERT INTO ChucVu (MaCV, TenCV, CapBac) VALUES
-('CV001', 'Giám Đốc', 1),
-('CV002', 'Trưởng Phòng', 2),
-('CV003', 'Phó Phòng', 3),
-('CV004', 'Nhân viên Senior', 4),
-('CV005', 'Nhân viên', 5),
-('CV006', 'Thực tập sinh', 6);
-
--- Mật khẩu mặc định: TrustTY@2024 (đã mã hóa bcrypt)
-INSERT INTO NhanVien (MaNV, TenNV, NgaySinh, DiaChi, SoCCCD, Email, SDT, TrangThai, MaPB, MaCV) VALUES
-('NV001', 'Nguyễn Văn An', '1985-03-15', 'Hà Nội', '001085003456', 'an.nguyen@trustty.vn', '0901234567', 'Đang làm', 'PB001', 'CV001'),
-('NV002', 'Trần Thị Bình', '1990-07-22', 'TP.HCM', '079090007891', 'binh.tran@trustty.vn', '0912345678', 'Đang làm', 'PB002', 'CV002'),
-('NV003', 'Lê Văn Cường', '1992-11-10', 'Đà Nẵng', '048092011234', 'cuong.le@trustty.vn', '0923456789', 'Đang làm', 'PB004', 'CV004'),
-('NV004', 'Phạm Thị Dung', '1995-05-18', 'Cần Thơ', '092095005678', 'dung.pham@trustty.vn', '0934567890', 'Đang làm', 'PB004', 'CV005'),
-('NV005', 'Hoàng Văn Em', '1993-09-25', 'Hải Phòng', '031093009012', 'em.hoang@trustty.vn', '0945678901', 'Đang làm', 'PB005', 'CV004'),
-('NV006', 'Vũ Thị Phương', '1997-01-30', 'Bình Dương', '074097013456', 'phuong.vu@trustty.vn', '0956789012', 'Đang làm', 'PB006', 'CV005');
-
--- Mật khẩu: TrustTY@2024
-INSERT INTO TaiKhoan (TenTaiKhoan, MatKhau, PhanQuyen, MaNV) VALUES
-('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhu2', 'Admin', 'NV001'),
-('hr.binh', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhu2', 'HR', 'NV002'),
-('dev.cuong', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhu2', 'Employee', 'NV003'),
-('dev.dung', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhu2', 'Employee', 'NV004'),
-('qa.em', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhu2', 'Manager', 'NV005'),
-('ba.phuong', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhu2', 'Employee', 'NV006');
-
-INSERT INTO DuAn (MaDA, TenDA, MoTa, TrangThai, NgayBD, NgayKT, ChiPhiDuKien) VALUES
-('DA001', 'TrustTY HRMS', 'Hệ thống quản lý nhân sự nội bộ', 'Đang chạy', '2026-01-01', '2026-12-31', 500000000),
-('DA002', 'Cổng thông tin khách hàng', 'Portal dành cho khách hàng doanh nghiệp', 'Đang chạy', '2026-03-01', '2026-09-30', 300000000),
-('DA003', 'Ứng dụng di động TrustTY', 'App iOS và Android cho nhân viên', 'Hoàn thành', '2025-06-01', '2025-12-31', 200000000);
-
-INSERT INTO PhanCong (MaNV, MaDA, VaiTro, ThoiGianTG) VALUES
-('NV003', 'DA001', 'Developer', '2026-01-01'),
-('NV004', 'DA001', 'Developer', '2026-01-01'),
-('NV005', 'DA001', 'Tester', '2026-01-01'),
-('NV006', 'DA001', 'BA', '2026-01-01'),
-('NV003', 'DA002', 'Developer', '2026-03-01'),
-('NV005', 'DA002', 'Tester', '2026-03-01');
-
-INSERT INTO BangLuong (MaBL, MaNV, Thang, Nam, LuongCB, PhuCap, ThueTNCN, ThucLinh) VALUES
-('BL202604NV003', 'NV003', 4, 2026, 18000000, 2000000, 450000, 17050000),
-('BL202604NV004', 'NV004', 4, 2026, 12000000, 1500000, 0, 12050000),
-('BL202604NV005', 'NV005', 4, 2026, 15000000, 1500000, 150000, 14400000),
-('BL202604NV006', 'NV006', 4, 2026, 11000000, 1000000, 0, 10450000);

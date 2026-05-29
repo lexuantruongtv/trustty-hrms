@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const pool = require('./config/database');
 
 const authRoutes = require('./routes/auth.routes');
 const phongBanRoutes = require('./routes/phongBan.routes');
@@ -44,6 +45,30 @@ app.use((error, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server TrustTY HRMS đang chạy tại cổng ${PORT}`);
-});
+
+async function khoiDongServer() {
+  // Kiểm tra kết nối MySQL trước khi lắng nghe request
+  try {
+    const connection = await pool.getConnection();
+    connection.release();
+    console.log('✔ Kết nối MySQL thành công');
+    console.log(`  Host    : ${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || 3306}`);
+    console.log(`  Database: ${process.env.DB_NAME || 'QuanLyNhanSu'}`);
+  } catch (error) {
+    console.error('✖ Không thể kết nối MySQL:', error.message);
+    console.error('  Kiểm tra lại:');
+    console.error('  1. MySQL đang chạy chưa?');
+    console.error(`  2. Thông tin trong backend/.env có đúng không?`);
+    console.error(`     DB_HOST=${process.env.DB_HOST || 'localhost'}`);
+    console.error(`     DB_PORT=${process.env.DB_PORT || 3306}`);
+    console.error(`     DB_USER=${process.env.DB_USER || 'root'}`);
+    console.error(`     DB_NAME=${process.env.DB_NAME || 'QuanLyNhanSu'}`);
+    process.exit(1);
+  }
+
+  app.listen(PORT, () => {
+    console.log(`✔ Server TrustTY HRMS đang chạy tại http://localhost:${PORT}`);
+  });
+}
+
+khoiDongServer();

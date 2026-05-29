@@ -15,12 +15,37 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      # init.sql chỉ tạo bảng (DDL), không có dữ liệu mẫu
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ptrustty123"]
       interval: 10s
       timeout: 5s
       retries: 10
+
+  # Dịch vụ seed dữ liệu mẫu — chạy một lần sau khi DB sẵn sàng
+  seeder:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: trustty-seeder
+    # restart: no — chỉ chạy một lần duy nhất
+    restart: "no"
+    command: node /database/seed.js
+    environment:
+      DB_HOST: database
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: trustty123
+      DB_NAME: QuanLyNhanSu
+      # Trỏ đến seed-data.js được mount vào container
+      SEED_DATA_PATH: /database/seed-data.js
+    volumes:
+      # Mount thư mục database vào container để seed.js đọc được seed-data.js
+      - ./database:/database
+    depends_on:
+      database:
+        condition: service_healthy
 
   # Dịch vụ Backend Node.js
   backend:

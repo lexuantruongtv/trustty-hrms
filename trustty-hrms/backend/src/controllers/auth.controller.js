@@ -52,7 +52,11 @@ async function dangNhap(req, res) {
     });
   } catch (error) {
     console.error('Lỗi đăng nhập:', error);
-    res.status(500).json({ message: 'Lỗi máy chủ' });
+    // Trả về thông báo lỗi chi tiết hơn để dễ debug
+    const thongBaoLoi = error.code === 'ECONNREFUSED' || error.code === 'ER_ACCESS_DENIED_ERROR'
+      ? 'Không thể kết nối cơ sở dữ liệu. Vui lòng kiểm tra MySQL đang chạy.'
+      : `Lỗi máy chủ: ${error.message}`;
+    res.status(500).json({ message: thongBaoLoi, code: error.code });
   }
 }
 
