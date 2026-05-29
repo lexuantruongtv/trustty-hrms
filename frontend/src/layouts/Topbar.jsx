@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
-  AppBar, Toolbar, IconButton, Typography, Box, Badge, Avatar, Menu, MenuItem,
-  Divider, Tooltip, Switch,
+  IconButton, Typography, Box, Badge, Avatar, Menu, MenuItem,
+  Divider, Tooltip,
 } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -41,19 +41,23 @@ const Topbar = ({ sidebarOpen }) => {
   };
 
   return (
-    <AppBar
-      position="fixed"
-      elevation={0}
+    <Box
       sx={{
-        zIndex: (t) => t.zIndex.drawer + 1,
+        display: 'flex',
+        alignItems: 'center',
+        px: 2,
+        height: 64,
+        flexShrink: 0,
         bgcolor: 'background.paper',
         borderBottom: '1px solid',
         borderColor: 'divider',
-        color: 'text.primary',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        gap: 1,
       }}
     >
-      <Toolbar sx={{ gap: 1 }}>
-        <Box sx={{ flex: 1 }} />
+      <Box sx={{ flex: 1 }} />
 
         {/* Dark mode toggle */}
         <Tooltip title={mode === 'dark' ? 'Chế độ sáng' : 'Chế độ tối'}>
@@ -70,8 +74,14 @@ const Topbar = ({ sidebarOpen }) => {
             </Badge>
           </IconButton>
         </Tooltip>
-        <Menu anchorEl={notifAnchor} open={Boolean(notifAnchor)} onClose={() => setNotifAnchor(null)}
-          PaperProps={{ sx: { width: 320, maxHeight: 400 } }}>
+        <Menu
+          anchorEl={notifAnchor}
+          open={Boolean(notifAnchor)}
+          onClose={() => setNotifAnchor(null)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          PaperProps={{ sx: { width: 320, maxHeight: 400, mt: 1 } }}
+        >
           <Box sx={{ px: 2, py: 1 }}>
             <Typography variant="subtitle2" fontWeight={700}>Thông báo</Typography>
           </Box>
@@ -96,7 +106,14 @@ const Topbar = ({ sidebarOpen }) => {
             </Avatar>
           </IconButton>
         </Tooltip>
-        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={() => setAnchorEl(null)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          PaperProps={{ sx: { mt: 1 } }}
+        >
           <Box sx={{ px: 2, py: 1 }}>
             <Typography variant="subtitle2" fontWeight={700}>{user?.TenNV}</Typography>
             <Typography variant="caption" color="text.secondary">{user?.PhanQuyen}</Typography>
@@ -109,8 +126,7 @@ const Topbar = ({ sidebarOpen }) => {
             <LogoutIcon fontSize="small" sx={{ mr: 1 }} /> Đăng xuất
           </MenuItem>
         </Menu>
-      </Toolbar>
-    </AppBar>
+    </Box>
   );
 };
 
