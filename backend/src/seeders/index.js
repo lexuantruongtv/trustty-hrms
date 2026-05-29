@@ -83,6 +83,7 @@ const seed = async () => {
     process.exit(0);
   } catch (err) {
     console.error('❌ Seed lỗi:', err.message);
+    console.error(err);
     process.exit(1);
   }
 };
