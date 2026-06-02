@@ -10,7 +10,7 @@ const getAll = async (query) => {
 
   const data = await DuAn.findAndCountAll({
     where, limit, offset,
-    include: [{ model: NhanVien, as: 'nhanViens', through: { attributes: ['VaiTro'] } }],
+    include: [{ model: NhanVien, as: 'nhanViens', through: { attributes: ['VaiTro', 'ThoiGianTG'] } }],
     order: [['NgayBD', 'DESC']],
   });
   return getPagingData(data, page, limit);
@@ -42,12 +42,12 @@ const remove = async (id) => {
   await da.destroy();
 };
 
-const phanCong = async (maDoan, maNV1, vaiTro) => {
+const phanCong = async (maDoan, maNV1, vaiTro, thoiGianTG) => {
   const [pc, created] = await PhanCong.findOrCreate({
     where: { MaDOAN: maDoan, MaNV1: maNV1 },
-    defaults: { VaiTro: vaiTro, ThoiGianTG: new Date() },
+    defaults: { VaiTro: vaiTro, ThoiGianTG: thoiGianTG || new Date() },
   });
-  if (!created) await pc.update({ VaiTro: vaiTro });
+  if (!created) await pc.update({ VaiTro: vaiTro, ThoiGianTG: thoiGianTG || pc.ThoiGianTG });
   return pc;
 };
 

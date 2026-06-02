@@ -50,12 +50,13 @@ const Leave = () => {
   const [data, setData] = useState({ items: [], total: 0 });
   const [page, setPage] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const canApprove = ['Admin', 'HR', 'Manager'].includes(user?.PhanQuyen);
+  const canApprove = ['Admin', 'TruongPhong'].includes(user?.PhanQuyen);
 
   const fetchData = useCallback(async () => {
     try {
       const params = { page: page + 1, limit: 10 };
-      if (user?.PhanQuyen === 'Employee') params.MaNV1 = user.MaNV1;
+      // Admin, Ketoan, TruongPhong xem tất cả
+      if (!['Admin', 'Ketoan', 'TruongPhong'].includes(user?.PhanQuyen)) params.MaNV1 = user.MaNV1;
       const res = await getLeaves(params);
       setData(res.data.data);
     } catch { }
@@ -138,9 +139,11 @@ const Leave = () => {
                         </Tooltip>
                       </>
                     )}
-                    <Tooltip title="Xóa">
-                      <IconButton size="small" color="error" onClick={() => handleDelete(np.MaDon)}><DeleteIcon fontSize="small" /></IconButton>
-                    </Tooltip>
+                    {(user?.PhanQuyen !== 'Ketoan' || np.nhanVien?.MaNV1 === user?.MaNV1 || np.MaNV1 === user?.MaNV1) && (
+                      <Tooltip title="Xóa">
+                        <IconButton size="small" color="error" onClick={() => handleDelete(np.MaDon)}><DeleteIcon fontSize="small" /></IconButton>
+                      </Tooltip>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

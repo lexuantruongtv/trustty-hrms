@@ -1,4 +1,6 @@
-const { BangLuong, NhanVien, ChucVu } = require('../models');
+const { BangLuong, NhanVien, BienDongLuong } = require('../models');
+const { sequelize } = require('../models');
+const { Op, fn, col, literal } = require('sequelize');
 const { getPagination, getPagingData } = require('../utils/pagination');
 
 const getAll = async (query) => {
@@ -13,7 +15,26 @@ const getAll = async (query) => {
     include: [{ model: NhanVien, as: 'nhanVien', attributes: ['TenNV', 'Avatar', 'MaPB'] }],
     order: [['Nam', 'DESC'], ['Thang', 'DESC']],
   });
-  return getPagingData(data, page, limit);
+
+  // Tính SUM biến động lương cho từng bản ghi
+  const rows = await Promise.all(data.rows.map(async (bl) => {
+    const result = await BienDongLuong.findOne({
+      where: {
+        MaNV1: bl.MaNV1,
+        NgayQuyetDinh: {
+          [Op.between]: [
+            `${bl.Nam}-${String(bl.Thang).padStart(2, '0')}-01`,
+            `${bl.Nam}-${String(bl.Thang).padStart(2, '0')}-31`,
+          ],
+        },
+      },
+      attributes: [[fn('COALESCE', fn('SUM', col('GiaTien')), 0), 'TongBienDong']],
+      raw: true,
+    });
+    return { ...bl.toJSON(), TongBienDong: parseFloat(result?.TongBienDong ?? 0) };
+  }));
+
+  return { ...getPagingData(data, page, limit), items: rows };
 };
 
 /**

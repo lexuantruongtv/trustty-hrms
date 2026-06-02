@@ -1,10 +1,10 @@
 const router = require('express').Router();
-const ctrl = require('../controllers/luongController');
+const ctrl = require('../controllers/bienDongLuongController');
 const { authenticate, authorize } = require('../middlewares/auth');
 
 router.use(authenticate);
 router.get('/', ctrl.getAll);
-router.post('/calculate', authorize('Admin', 'Ketoan'), ctrl.tinhLuong);
-router.delete('/:id', authorize('Admin', 'Ketoan'), ctrl.remove);
+router.post('/', authorize('Admin'), ctrl.create);
+router.delete('/:id', authorize('Admin'), ctrl.remove);
 
 module.exports = router;

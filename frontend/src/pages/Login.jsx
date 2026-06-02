@@ -94,7 +94,7 @@ const Login = () => {
               <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" mb={1}>
                 Tài khoản demo:
               </Typography>
-              {[['admin','Admin'],['hr','HR'],['manager','Manager'],['employee','Employee']].map(([u, r]) => (
+              {[['admin','Admin'],['hr','HR'],['manager','Manager'],['employee','Employee'],['ketoan','Kế toán'],['truongphong','Trưởng phòng']].map(([u, r]) => (
                 <Box key={u} sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                   <Typography variant="caption" color="text.secondary">{r}:</Typography>
                   <Typography variant="caption" fontWeight={600}

@@ -22,6 +22,7 @@ const useToast = () => ({
       cancelButtonColor: '#ef4444',
       confirmButtonText: 'Xác nhận',
       cancelButtonText: 'Hủy',
+      customClass: { container: 'swal-on-top' },
     }),
 });
 

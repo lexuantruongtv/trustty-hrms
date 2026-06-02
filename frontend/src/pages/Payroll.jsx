@@ -3,10 +3,12 @@ import {
   Box, Card, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   TablePagination, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Typography, Avatar, MenuItem, Select, FormControl, InputLabel, Grid,
+  IconButton, Tooltip,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { useForm, Controller } from 'react-hook-form';
-import { getPayroll, calculatePayroll } from '../api/payroll';
+import { getPayroll, calculatePayroll, deletePayroll } from '../api/payroll';
 import { getEmployees } from '../api/employees';
 import PageHeader from '../components/common/PageHeader';
 import EmptyState from '../components/common/EmptyState';
@@ -76,12 +78,13 @@ const Payroll = () => {
   const [page, setPage] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [employees, setEmployees] = useState([]);
-  const canManage = ['Admin', 'HR'].includes(user?.PhanQuyen);
+  const canManage = ['Admin', 'Ketoan'].includes(user?.PhanQuyen);
 
   const fetchData = useCallback(async () => {
     try {
       const params = { page: page + 1, limit: 10 };
-      if (user?.PhanQuyen === 'Employee') params.MaNV1 = user.MaNV1;
+      // Chỉ Admin và Kế toán mới xem tất cả
+      if (!['Admin', 'Ketoan'].includes(user?.PhanQuyen)) params.MaNV1 = user.MaNV1;
       const res = await getPayroll(params);
       setData(res.data.data);
     } catch { }
@@ -101,6 +104,14 @@ const Payroll = () => {
     } catch (e) { toast.error(e.response?.data?.message || 'Lỗi'); }
   };
 
+  const handleDelete = async (id) => {
+    const r = await toast.confirm('Xóa bảng lương này?', '');
+    if (r.isConfirmed) {
+      try { await deletePayroll(id); toast.success('Đã xóa'); fetchData(); }
+      catch (e) { toast.error(e.response?.data?.message || 'Lỗi'); }
+    }
+  };
+
   return (
     <Box>
       <PageHeader title="Bảng lương" subtitle={`${data.total} bản ghi`}
@@ -116,13 +127,15 @@ const Payroll = () => {
                 <TableCell align="right">Lương CB</TableCell>
                 <TableCell align="right">Phụ cấp</TableCell>
                 <TableCell align="right">Thuế TNCN</TableCell>
+                <TableCell align="right">Biến động</TableCell>
                 <TableCell align="right">Thực lĩnh</TableCell>
+                {canManage && <TableCell align="center">Thao tác</TableCell>}
               </TableRow>
             </TableHead>
             <TableBody>
               {data.items.length === 0 ? (
-                <TableRow><TableCell colSpan={6}><EmptyState message="Chưa có bảng lương" /></TableCell></TableRow>
-              ) : data.items.map((bl) => (
+                <TableRow><TableCell colSpan={canManage ? 8 : 7}><EmptyState message="Chưa có bảng lương" /></TableCell></TableRow>
+              ) : data.items.map((bl, i) => (
                 <TableRow key={bl.MaBL} hover>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -136,7 +149,22 @@ const Payroll = () => {
                   <TableCell align="right">{formatCurrency(bl.LuongCB)}</TableCell>
                   <TableCell align="right">{formatCurrency(bl.PhuCap)}</TableCell>
                   <TableCell align="right" sx={{ color: 'error.main' }}>-{formatCurrency(bl.ThueTNCN)}</TableCell>
+                  <TableCell align="right">
+                    <Typography variant="body2" fontWeight={600}
+                      sx={{ color: (bl.TongBienDong ?? 0) >= 0 ? 'success.main' : 'error.main' }}>
+                      {(bl.TongBienDong ?? 0) >= 0 ? '+' : ''}{formatCurrency(bl.TongBienDong ?? 0)}
+                    </Typography>
+                  </TableCell>
                   <TableCell align="right" sx={{ fontWeight: 700, color: 'success.main' }}>{formatCurrency(bl.ThucLinh)}</TableCell>
+                  {canManage && (
+                    <TableCell align="center">
+                      <Tooltip title="Xóa">
+                        <IconButton size="small" color="error" onClick={() => handleDelete(bl.MaBL)}>
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>

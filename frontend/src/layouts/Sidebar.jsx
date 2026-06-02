@@ -28,18 +28,20 @@ const MINI_WIDTH = 72;
 
 const getMenuItems = (role) => {
   const all = [
-    { label: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard', roles: ['Admin', 'HR', 'Manager', 'Employee'] },
-    { label: 'Nhân viên', icon: <PeopleIcon />, path: '/employees', roles: ['Admin', 'HR', 'Manager'] },
-    { label: 'Phòng ban', icon: <BusinessIcon />, path: '/departments', roles: ['Admin', 'HR'] },
-    { label: 'Chức vụ', icon: <WorkIcon />, path: '/positions', roles: ['Admin', 'HR'] },
-    { label: 'Dự án', icon: <FolderIcon />, path: '/projects', roles: ['Admin', 'HR', 'Manager'] },
-    { label: 'Chấm công', icon: <AccessTimeIcon />, path: '/attendance', roles: ['Admin', 'HR', 'Manager', 'Employee'] },
-    { label: 'Nghỉ phép', icon: <EventBusyIcon />, path: '/leave', roles: ['Admin', 'HR', 'Manager', 'Employee'] },
-    { label: 'Bảng lương', icon: <PaymentsIcon />, path: '/payroll', roles: ['Admin', 'HR', 'Employee'] },
+    { label: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard', roles: ['Admin', 'HR', 'Manager', 'Employee', 'Ketoan', 'TruongPhong'] },
+    { label: 'Nhân viên', icon: <PeopleIcon />, path: '/employees', roles: ['Admin', 'HR', 'Manager', 'Ketoan', 'TruongPhong'] },
+    { label: 'Phòng ban', icon: <BusinessIcon />, path: '/departments', roles: ['Admin'] },
+    { label: 'Chức vụ', icon: <WorkIcon />, path: '/positions', roles: ['Admin'] },
+    { label: 'Dự án', icon: <FolderIcon />, path: '/projects', roles: ['Admin', 'Manager'] },
+    { label: 'Dự án của tôi', icon: <FolderIcon />, path: '/my-projects', roles: ['Employee'] },
+    { label: 'Chấm công', icon: <AccessTimeIcon />, path: '/attendance', roles: ['Admin', 'HR', 'Manager', 'Employee', 'Ketoan', 'TruongPhong'] },
+    { label: 'Nghỉ phép', icon: <EventBusyIcon />, path: '/leave', roles: ['Admin', 'HR', 'Manager', 'Employee', 'Ketoan', 'TruongPhong'] },
+    { label: 'Bảng lương', icon: <PaymentsIcon />, path: '/payroll', roles: ['Admin', 'Ketoan', 'HR', 'Manager', 'Employee', 'TruongPhong'] },
+    { label: 'Biến động lương', icon: <PaymentsIcon />, path: '/salary-changes', roles: ['Admin', 'Ketoan', 'HR', 'Manager', 'Employee', 'TruongPhong'] },
     { label: 'Hợp đồng', icon: <DescriptionIcon />, path: '/contracts', roles: ['Admin', 'HR'] },
     { label: 'Bảo hiểm', icon: <HealthAndSafetyIcon />, path: '/insurance', roles: ['Admin', 'HR'] },
-    { label: 'Trình độ', icon: <SchoolIcon />, path: '/education', roles: ['Admin', 'HR', 'Employee'] },
-    { label: 'Thông báo', icon: <NotificationsIcon />, path: '/notifications', roles: ['Admin', 'HR', 'Manager', 'Employee'] },
+    { label: 'Trình độ', icon: <SchoolIcon />, path: '/education', roles: ['Admin', 'HR'] },
+    { label: 'Thông báo', icon: <NotificationsIcon />, path: '/notifications', roles: ['Admin', 'HR', 'Manager', 'Employee', 'Ketoan', 'TruongPhong'] },
   ];
   return all.filter((m) => m.roles.includes(role));
 };
@@ -51,7 +53,7 @@ const Sidebar = ({ open, onToggle }) => {
   const menuItems = getMenuItems(user?.PhanQuyen);
 
   const roleColors = {
-    Admin: '#6366f1', HR: '#ec4899', Manager: '#f59e0b', Employee: '#10b981',
+    Admin: '#6366f1', HR: '#ec4899', Manager: '#f59e0b', Employee: '#10b981', Ketoan: '#0ea5e9', TruongPhong: '#8b5cf6',
   };
   const roleColor = roleColors[user?.PhanQuyen] || '#6366f1';
 

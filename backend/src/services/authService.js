@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const jwtConfig = require('../config/jwt');
-const { TaiKhoan, NhanVien, PhongBan, ChucVu } = require('../models');
+const { TaiKhoan, NhanVien, PhongBan, ChucVu, TrinhDo, HopDong, BaoHiem } = require('../models');
 
 const login = async (tenTaiKhoan, matKhau) => {
   const tk = await TaiKhoan.findOne({
@@ -35,6 +35,9 @@ const getProfile = async (maNV1) => {
       { model: PhongBan, as: 'phongBan' },
       { model: ChucVu, as: 'chucVu' },
       { model: TaiKhoan, as: 'taiKhoan', attributes: ['TenTaiKhoan', 'PhanQuyen'] },
+      { model: TrinhDo, as: 'trinhDos' },
+      { model: HopDong, as: 'hopDongs' },
+      { model: BaoHiem, as: 'baoHiems' },
     ],
   });
 };

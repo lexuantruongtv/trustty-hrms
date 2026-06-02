@@ -13,6 +13,7 @@ const BaoHiem = require('./BaoHiem');
 const HopDong = require('./HopDong');
 const TrinhDo = require('./TrinhDo');
 const ThongBao = require('./ThongBao');
+const GhiChuDuAn = require('./GhiChuDuAn');
 
 // PhongBan <-> NhanVien
 PhongBan.hasMany(NhanVien, { foreignKey: 'MaPB', as: 'nhanViens' });
@@ -64,6 +65,12 @@ TrinhDo.belongsTo(NhanVien, { foreignKey: 'MaNV1', as: 'nhanVien' });
 NhanVien.hasMany(ThongBao, { foreignKey: 'MaNV1', as: 'thongBaos' });
 ThongBao.belongsTo(NhanVien, { foreignKey: 'MaNV1', as: 'nhanVien' });
 
+// DuAn -> GhiChuDuAn, NhanVien -> GhiChuDuAn
+DuAn.hasMany(GhiChuDuAn, { foreignKey: 'MaDOAN', as: 'ghiChus' });
+GhiChuDuAn.belongsTo(DuAn, { foreignKey: 'MaDOAN', as: 'duAn' });
+NhanVien.hasMany(GhiChuDuAn, { foreignKey: 'MaNV1', as: 'ghiChus' });
+GhiChuDuAn.belongsTo(NhanVien, { foreignKey: 'MaNV1', as: 'nhanVien' });
+
 module.exports = {
   sequelize,
   PhongBan,
@@ -80,4 +87,5 @@ module.exports = {
   HopDong,
   TrinhDo,
   ThongBao,
+  GhiChuDuAn,
 };
