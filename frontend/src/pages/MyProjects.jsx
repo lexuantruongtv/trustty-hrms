@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import {
   Box, Card, CardContent, Typography, Grid, Chip, LinearProgress,
   Dialog, DialogTitle, DialogContent, DialogActions, Button, IconButton,
-  TextField, Divider, Avatar, CircularProgress,
+  TextField, Divider, Avatar, List, ListItem, ListItemAvatar, ListItemText,
+  CircularProgress,
 } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import SendIcon from '@mui/icons-material/Send';
 import { motion } from 'framer-motion';
-import { getMyProjects, addNote, getNotes } from '../api/projects';
+import { getMyProjects, addNote, getNotes, getProject } from '../api/projects';
 import PageHeader from '../components/common/PageHeader';
 import StatusChip from '../components/common/StatusChip';
 import EmptyState from '../components/common/EmptyState';
@@ -17,23 +18,27 @@ import useAuthStore from '../store/authStore';
 import { formatDate, getInitials } from '../utils/format';
 
 // ── Dialog xem chi tiết + ghi chú ───────────────────────────────────────────
-const ProjectNoteDialog = ({ open, onClose, project, onNoteAdded }) => {
+const ProjectNoteDialog = ({ open, onClose, projectId, onNoteAdded }) => {
   const toast = useToast();
   const { user } = useAuthStore();
   const [note, setNote] = useState('');
   const [sending, setSending] = useState(false);
   const [notes, setNotes] = useState([]);
+  const [project, setProject] = useState(null);
 
   const reloadNotes = (id) => getNotes(id).then((r) => setNotes(r.data.data ?? [])).catch(() => {});
+  const reloadProject = (id) => getProject(id).then((r) => setProject(r.data.data)).catch(() => {});
 
   useEffect(() => {
-    if (!open) { setNote(''); return; }
-    if (project) reloadNotes(project.MaDOAN);
-  }, [open, project]);
+    if (!open || !projectId) { setNote(''); setProject(null); setNotes([]); return; }
+    reloadProject(projectId);
+    reloadNotes(projectId);
+  }, [open, projectId]);
 
   if (!project) return null;
 
-  const pc = project.nhanViens?.[0]?.PhanCong ?? project.nhanViens?.[0]?.phanCong ?? {};
+  const myMembership = project.nhanViens?.find((nv) => nv.MaNV1 === user?.MaNV1);
+  const pc = myMembership?.PhanCong ?? myMembership?.phanCong ?? {};
 
   const handleSend = async () => {
     if (!note.trim()) return;
@@ -43,8 +48,7 @@ const ProjectNoteDialog = ({ open, onClose, project, onNoteAdded }) => {
       setNote('');
       reloadNotes(project.MaDOAN);
       onNoteAdded();
-    } catch { toast.error('Lỗi gửi ghi chú'); }
-    finally { setSending(false); }
+    } catch { toast.error('Lỗi gửi ghi chú'); }    finally { setSending(false); }
   };
 
   return (
@@ -90,6 +94,35 @@ const ProjectNoteDialog = ({ open, onClose, project, onNoteAdded }) => {
 
         <Divider sx={{ mb: 2 }} />
 
+        {/* Thành viên dự án */}
+        <Typography variant="subtitle2" fontWeight={700} mb={1}>
+          Thành viên ({project.nhanViens?.length || 0})
+        </Typography>
+        <List disablePadding sx={{ mb: 1 }}>
+          {(project.nhanViens ?? []).map((nv) => {
+            const nvPc = nv.PhanCong ?? nv.phanCong ?? {};
+            return (
+              <ListItem key={nv.MaNV1} disablePadding sx={{ py: 0.5 }}>
+                <ListItemAvatar sx={{ minWidth: 40 }}>
+                  <Avatar sx={{ width: 30, height: 30, bgcolor: nv.MaNV1 === user?.MaNV1 ? '#6366f1' : '#94a3b8', fontSize: 11 }}>
+                    {getInitials(nv.TenNV)}
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={
+                    <Typography variant="body2" fontWeight={nv.MaNV1 === user?.MaNV1 ? 700 : 400}>
+                      {nv.TenNV}{nv.MaNV1 === user?.MaNV1 ? ' (bạn)' : ''}
+                    </Typography>
+                  }
+                  secondary={<Typography variant="caption" color="text.secondary">{nvPc.VaiTro || '—'}</Typography>}
+                />
+              </ListItem>
+            );
+          })}
+        </List>
+
+        <Divider sx={{ mb: 2 }} />
+
         {/* Lịch sử ghi chú */}
         <Typography variant="subtitle2" fontWeight={700} mb={1.5}>Lịch sử ghi chú</Typography>
         <Box sx={{ maxHeight: 280, overflowY: 'auto', pr: 0.5, mb: 1.5 }}>
@@ -125,8 +158,7 @@ const ProjectNoteDialog = ({ open, onClose, project, onNoteAdded }) => {
 const MyProjects = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selected, setSelected] = useState(null);  const [dialogOpen, setDialogOpen] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -139,13 +171,7 @@ const MyProjects = () => {
 
   useEffect(() => { fetchData(); }, []);
 
-  const handleNoteAdded = async () => {
-    await fetchData();
-    // cập nhật selected
-    const updated = (await getMyProjects()).data.data ?? [];
-    const proj = updated.find((p) => p.MaDOAN === selected?.MaDOAN);
-    if (proj) setSelected(proj);
-  };
+  const handleNoteAdded = async () => { await fetchData(); };
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', pt: 8 }}><CircularProgress /></Box>;
 
@@ -160,7 +186,7 @@ const MyProjects = () => {
               <Grid item xs={12} md={6} lg={4} key={da.MaDOAN}>
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
                   <Card sx={{ height: '100%', cursor: 'pointer', '&:hover': { boxShadow: 4 }, transition: 'box-shadow 0.2s' }}
-                    onClick={() => { setSelected(da); setDialogOpen(true); }}>
+                    onClick={() => { setSelected(da.MaDOAN); setDialogOpen(true); }}>
                     <CardContent sx={{ p: 3 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                         <StatusChip status={da.TrangThai} />
@@ -203,7 +229,7 @@ const MyProjects = () => {
         </Grid>
       )}
       <ProjectNoteDialog open={dialogOpen} onClose={() => setDialogOpen(false)}
-        project={selected} onNoteAdded={handleNoteAdded} />
+        projectId={selected} onNoteAdded={handleNoteAdded} />
     </Box>
   );
 };

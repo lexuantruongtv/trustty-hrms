@@ -155,7 +155,9 @@ const Payroll = () => {
                       {(bl.TongBienDong ?? 0) >= 0 ? '+' : ''}{formatCurrency(bl.TongBienDong ?? 0)}
                     </Typography>
                   </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 700, color: 'success.main' }}>{formatCurrency(bl.ThucLinh)}</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700, color: 'success.main' }}>
+                    {formatCurrency((+bl.ThucLinh || 0) + (+(bl.TongBienDong ?? 0)))}
+                  </TableCell>
                   {canManage && (
                     <TableCell align="center">
                       <Tooltip title="Xóa">

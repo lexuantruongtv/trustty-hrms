@@ -2,19 +2,20 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box, Card, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Button, IconButton, Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Grid, Tooltip,
+  TextField, Grid, Tooltip, MenuItem, Select, FormControl, InputLabel,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useForm, Controller } from 'react-hook-form';
 import api from '../api/axios';
+import { getEmployees } from '../api/employees';
 import PageHeader from '../components/common/PageHeader';
 import EmptyState from '../components/common/EmptyState';
 import useToast from '../hooks/useToast';
 import useAuthStore from '../store/authStore';
 
-const EduForm = ({ open, onClose, onSave, initial }) => {
+const EduForm = ({ open, onClose, onSave, initial, employees }) => {
   const { control, handleSubmit, reset } = useForm({ defaultValues: initial || {} });
   useEffect(() => { reset(initial || {}); }, [initial]);
   return (
@@ -23,6 +24,17 @@ const EduForm = ({ open, onClose, onSave, initial }) => {
       <form onSubmit={handleSubmit(onSave)}>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 0.5 }}>
+            <Grid item xs={12}>
+              <Controller name="MaNV1" control={control} rules={{ required: true }}
+                render={({ field }) => (
+                  <FormControl fullWidth>
+                    <InputLabel>Nhân viên</InputLabel>
+                    <Select {...field} label="Nhân viên">
+                      {employees.map((e) => <MenuItem key={e.MaNV1} value={e.MaNV1}>{e.TenNV}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                )} />
+            </Grid>
             {[
               { name: 'TenBangCap', label: 'Tên bằng cấp' },
               { name: 'ChuyenNganh', label: 'Chuyên ngành' },
@@ -52,6 +64,11 @@ const Education = () => {
   const [items, setItems] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
+  const [employees, setEmployees] = useState([]);
+
+  useEffect(() => {
+    getEmployees({ limit: 200 }).then((r) => setEmployees(r.data.data?.items || [])).catch(() => {});
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
@@ -92,6 +109,7 @@ const Education = () => {
           <Table>
             <TableHead>
               <TableRow sx={{ '& th': { fontWeight: 700, bgcolor: 'action.hover' } }}>
+                <TableCell>Mã TĐ</TableCell>
                 <TableCell>Nhân viên</TableCell>
                 <TableCell>Bằng cấp</TableCell>
                 <TableCell>Chuyên ngành</TableCell>
@@ -102,9 +120,10 @@ const Education = () => {
             </TableHead>
             <TableBody>
               {items.length === 0 ? (
-                <TableRow><TableCell colSpan={6}><EmptyState message="Chưa có dữ liệu" /></TableCell></TableRow>
+                <TableRow><TableCell colSpan={7}><EmptyState message="Chưa có dữ liệu" /></TableCell></TableRow>
               ) : items.map((td) => (
                 <TableRow key={td.MaTD} hover>
+                  <TableCell sx={{ fontFamily: 'monospace', fontSize: 13, color: 'text.secondary' }}>{td.MaTD}</TableCell>
                   <TableCell>{td.nhanVien?.TenNV}</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>{td.TenBangCap}</TableCell>
                   <TableCell>{td.ChuyenNganh}</TableCell>
@@ -120,7 +139,7 @@ const Education = () => {
           </Table>
         </TableContainer>
       </Card>
-      <EduForm open={dialogOpen} onClose={() => setDialogOpen(false)} onSave={handleSave} initial={editItem} />
+      <EduForm open={dialogOpen} onClose={() => setDialogOpen(false)} onSave={handleSave} initial={editItem} employees={employees} />
     </Box>
   );
 };
