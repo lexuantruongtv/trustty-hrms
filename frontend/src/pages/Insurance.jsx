@@ -3,10 +3,12 @@ import {
   Box, Card, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   TablePagination, Button, IconButton, Dialog, DialogTitle, DialogContent,
   DialogActions, TextField, MenuItem, Select, FormControl, InputLabel, Grid, Tooltip,
+  InputAdornment, Stack,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SearchIcon from '@mui/icons-material/Search';
 import { useForm, Controller } from 'react-hook-form';
 import api from '../api/axios';
 import { getEmployees } from '../api/employees';
@@ -77,13 +79,21 @@ const Insurance = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [employees, setEmployees] = useState([]);
+  const [search, setSearch] = useState('');
+  const [filterLoai, setFilterLoai] = useState('');
 
   const fetchData = useCallback(async () => {
-    try { const res = await api.get('/insurance', { params: { page: page + 1, limit: 10 } }); setData(res.data.data); } catch { }
-  }, [page]);
+    try {
+      const res = await api.get('/insurance', {
+        params: { page: page + 1, limit: 10, search: search || undefined, TenBH: filterLoai || undefined },
+      });
+      setData(res.data.data);
+    } catch { }
+  }, [page, search, filterLoai]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
   useEffect(() => { getEmployees({ limit: 100 }).then((r) => setEmployees(r.data.data?.items || [])); }, []);
+  useEffect(() => { setPage(0); }, [search, filterLoai]);
 
   const handleSave = async (formData) => {
     try {
@@ -109,6 +119,25 @@ const Insurance = () => {
         action={<Button variant="contained" startIcon={<AddIcon />} onClick={() => { setEditItem(null); setDialogOpen(true); }}>Thêm bảo hiểm</Button>}
       />
       <Card>
+        <Stack direction="row" spacing={2} sx={{ p: 2, flexWrap: 'wrap' }}>
+          <TextField
+            placeholder="Tìm theo tên nhân viên..."
+            size="small"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            sx={{ minWidth: 240 }}
+            InputProps={{
+              startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment>,
+            }}
+          />
+          <FormControl size="small" sx={{ minWidth: 180 }}>
+            <InputLabel>Loại bảo hiểm</InputLabel>
+            <Select value={filterLoai} label="Loại bảo hiểm" onChange={(e) => setFilterLoai(e.target.value)}>
+              <MenuItem value="">Tất cả</MenuItem>
+              {LOAI_BH.map((l) => <MenuItem key={l} value={l}>{l}</MenuItem>)}
+            </Select>
+          </FormControl>
+        </Stack>
         <TableContainer>
           <Table>
             <TableHead>

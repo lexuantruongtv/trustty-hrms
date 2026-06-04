@@ -1,15 +1,25 @@
 const { HopDong, NhanVien } = require('../models');
 const { success } = require('../utils/response');
 const { getPagination, getPagingData } = require('../utils/pagination');
+const { Op } = require('sequelize');
 
 const getAll = async (req, res, next) => {
   try {
     const { page, limit, offset } = getPagination(req.query);
     const where = {};
     if (req.query.MaNV1) where.MaNV1 = req.query.MaNV1;
+    if (req.query.LoaiHD) where.LoaiHD = req.query.LoaiHD;
+
+    const includeWhere = {};
+    if (req.query.search) includeWhere.TenNV = { [Op.like]: `%${req.query.search}%` };
+
     const data = await HopDong.findAndCountAll({
       where, limit, offset,
-      include: [{ model: NhanVien, as: 'nhanVien', attributes: ['TenNV'] }],
+      include: [{
+        model: NhanVien, as: 'nhanVien', attributes: ['TenNV'],
+        where: Object.keys(includeWhere).length ? includeWhere : undefined,
+        required: Object.keys(includeWhere).length > 0,
+      }],
       order: [['NgayKy', 'DESC']],
     });
     success(res, getPagingData(data, page, limit));
