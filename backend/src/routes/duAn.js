@@ -4,6 +4,7 @@ const { authenticate, authorize } = require('../middlewares/auth');
 
 router.use(authenticate);
 router.get('/my', ctrl.getMyProjects);
+router.get('/nv-chua-tham-gia', authorize('Admin', 'Manager'), ctrl.getNvChuaThamGia);
 router.get('/', ctrl.getAll);
 router.get('/:id', ctrl.getById);
 router.post('/', authorize('Admin', 'HR', 'Manager'), ctrl.create);

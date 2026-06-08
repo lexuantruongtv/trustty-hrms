@@ -4,7 +4,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem,
   Select, FormControl, InputLabel, LinearProgress, Tooltip, Divider,
   Avatar, List, ListItem, ListItemAvatar, ListItemText, ListItemSecondaryAction,
-  Slider, CircularProgress,
+  Slider, CircularProgress, Collapse,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -13,9 +13,12 @@ import PeopleIcon from '@mui/icons-material/People';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import SendIcon from '@mui/icons-material/Send';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { motion } from 'framer-motion';
 import { useForm, Controller } from 'react-hook-form';
-import { getProjects, createProject, updateProject, deleteProject, assignMember, removeAssign, getNotes, addNote } from '../api/projects';
+import { getProjects, createProject, updateProject, deleteProject, assignMember, removeAssign, getNotes, addNote, getNvChuaThamGia } from '../api/projects';
 import { getEmployees } from '../api/employees';
 import PageHeader from '../components/common/PageHeader';
 import StatusChip from '../components/common/StatusChip';
@@ -328,6 +331,8 @@ const Projects = () => {
   const [editItem, setEditItem] = useState(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailProject, setDetailProject] = useState(null);
+  const [nvChuaThamGia, setNvChuaThamGia] = useState([]);
+  const [showNvRanh, setShowNvRanh] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -337,6 +342,7 @@ const Projects = () => {
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { getNvChuaThamGia().then((r) => setNvChuaThamGia(r.data.data || [])).catch(() => {}); }, []);
 
   // Refresh detail project sau khi update
   const handleUpdated = async () => {
@@ -443,6 +449,45 @@ const Projects = () => {
           ))}
         </Grid>
       )}
+
+      {/* Panel NV Phòng KT chưa tham gia dự án */}
+      <Card sx={{ mt: 3, borderLeft: '4px solid #f59e0b' }}>
+        <CardContent sx={{ p: 2, pb: '12px !important' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+            onClick={() => setShowNvRanh((v) => !v)}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <WarningAmberIcon sx={{ color: '#f59e0b', fontSize: 20 }} />
+              <Typography fontWeight={700} variant="body1">
+                Nhân viên Phòng Kỹ Thuật chưa tham gia dự án nào
+              </Typography>
+              <Chip label={nvChuaThamGia.length} size="small" sx={{ bgcolor: '#f59e0b', color: '#fff', fontWeight: 700 }} />
+            </Box>
+            {showNvRanh ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          </Box>
+          <Collapse in={showNvRanh}>
+            <Divider sx={{ my: 1.5 }} />
+            {nvChuaThamGia.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">Tất cả nhân viên đã tham gia dự án</Typography>
+            ) : (
+              <Grid container spacing={1.5} sx={{ mt: 0.5 }}>
+                {nvChuaThamGia.map((nv) => (
+                  <Grid item xs={12} sm={6} md={4} key={nv.MaNV1}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.5, borderRadius: 2, bgcolor: 'action.hover' }}>
+                      <Avatar sx={{ width: 36, height: 36, bgcolor: '#6366f1', fontSize: 13, fontWeight: 700 }}>
+                        {getInitials(nv.TenNV)}
+                      </Avatar>
+                      <Box>
+                        <Typography variant="body2" fontWeight={600}>{nv.TenNV}</Typography>
+                        <Typography variant="caption" color="text.secondary">{nv.chucVu?.TenCV || nv.MaNV1}</Typography>
+                      </Box>
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
+            )}
+          </Collapse>
+        </CardContent>
+      </Card>
 
       <ProjectForm open={dialogOpen} onClose={() => setDialogOpen(false)}
         onSave={handleSave} initial={editItem} />

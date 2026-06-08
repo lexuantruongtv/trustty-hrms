@@ -88,4 +88,25 @@ const getNotes = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
-module.exports = { getAll, getById, getMyProjects, create, update, remove, phanCong, huyPhanCong, addNote, getNotes };
+const getNvChuaThamGia = async (req, res, next) => {
+  try {
+    const { Op, literal } = require('sequelize');
+    const { PhongBan, ChucVu } = require('../models');
+
+    const phongKT = await PhongBan.findOne({ where: { TenPB: { [Op.like]: '%Kỹ Thuật%' } } });
+    if (!phongKT) return success(res, []);
+
+    const nvChuaThamGia = await NhanVien.findAll({
+      where: {
+        MaPB: phongKT.MaPB,
+        TrangThai: 'Đang làm việc',
+        MaNV1: { [Op.notIn]: literal('(SELECT DISTINCT MaNV1 FROM PhanCong)') },
+      },
+      attributes: ['MaNV1', 'TenNV', 'Email', 'SDT'],
+      include: [{ model: ChucVu, as: 'chucVu', attributes: ['TenCV'] }],
+    });
+    success(res, nvChuaThamGia);
+  } catch (e) { next(e); }
+};
+
+module.exports = { getAll, getById, getMyProjects, create, update, remove, phanCong, huyPhanCong, addNote, getNotes, getNvChuaThamGia };

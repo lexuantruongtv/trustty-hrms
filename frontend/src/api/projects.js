@@ -10,3 +10,4 @@ export const assignMember = (id, data) => api.post(`/projects/${id}/assign`, dat
 export const removeAssign = (id, maNV1) => api.delete(`/projects/${id}/assign/${maNV1}`);
 export const addNote = (id, data) => api.post(`/projects/${id}/notes`, data);
 export const getNotes = (id) => api.get(`/projects/${id}/notes`);
+export const getNvChuaThamGia = () => api.get('/projects/nv-chua-tham-gia');
