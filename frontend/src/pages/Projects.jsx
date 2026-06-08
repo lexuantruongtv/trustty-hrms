@@ -67,6 +67,10 @@ const ProjectForm = ({ open, onClose, onSave, initial }) => {
                 render={({ field }) => <TextField {...field} label="Chi phí thực tế" type="number" fullWidth />} />
             </Grid>
             <Grid item xs={6}>
+              <Controller name="DoanhThu" control={control}
+                render={({ field }) => <TextField {...field} label="Doanh thu" type="number" fullWidth />} />
+            </Grid>
+            <Grid item xs={6}>
               <Controller name="TrangThai" control={control}
                 render={({ field }) => (
                   <FormControl fullWidth><InputLabel>Trạng thái</InputLabel>

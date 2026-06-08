@@ -17,6 +17,7 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import HealthAndSafetyIcon from '@mui/icons-material/HealthAndSafety';
 import SchoolIcon from '@mui/icons-material/School';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import BarChartIcon from '@mui/icons-material/BarChart';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import MenuIcon from '@mui/icons-material/Menu';
 import useAuthStore from '../store/authStore';
@@ -42,6 +43,7 @@ const getMenuItems = (role) => {
     { label: 'Bảo hiểm', icon: <HealthAndSafetyIcon />, path: '/insurance', roles: ['Admin', 'HR'] },
     { label: 'Trình độ', icon: <SchoolIcon />, path: '/education', roles: ['Admin', 'HR'] },
     { label: 'Thông báo', icon: <NotificationsIcon />, path: '/notifications', roles: ['Admin', 'HR', 'Manager', 'Employee', 'Ketoan', 'TruongPhong'] },
+    { label: 'Thống kê', icon: <BarChartIcon />, path: '/statistics', roles: ['Admin'] },
   ];
   return all.filter((m) => m.roles.includes(role));
 };

@@ -12,3 +12,4 @@ export const TRANG_THAI_DA = ['Đang thực hiện', 'Hoàn thành', 'Tạm dừ
 export const TRANG_THAI_PHEP = ['Chờ duyệt', 'Đã duyệt', 'Từ chối'];
 export const LOAI_HD = ['Thử việc', 'Chính thức', 'Thời vụ', 'Cộng tác viên'];
 export const LOAI_BH = ['BHXH', 'BHYT', 'BHTN'];
+export const BANG_CAP = ['Trung cấp', 'Cao đẳng', 'Đại học', 'Thạc sĩ', 'Tiến sĩ', 'Khác'];

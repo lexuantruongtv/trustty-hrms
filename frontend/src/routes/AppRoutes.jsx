@@ -20,6 +20,7 @@ const Education = lazy(() => import('../pages/Education'));
 const Notifications = lazy(() => import('../pages/Notifications'));
 const Profile = lazy(() => import('../pages/Profile'));
 const SalaryChanges = lazy(() => import('../pages/SalaryChanges'));
+const Statistics = lazy(() => import('../pages/Statistics'));
 
 const AppRoutes = () => (
   <Suspense fallback={<LoadingScreen />}>
@@ -42,6 +43,7 @@ const AppRoutes = () => (
         <Route path="notifications" element={<Notifications />} />
         <Route path="profile" element={<Profile />} />
         <Route path="salary-changes" element={<SalaryChanges />} />
+        <Route path="statistics" element={<ProtectedRoute roles={['Admin']}><Statistics /></ProtectedRoute>} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

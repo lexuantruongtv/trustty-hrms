@@ -30,6 +30,7 @@ app.use('/api/education', require('./routes/trinhDo'));
 app.use('/api/notifications', require('./routes/thongBao'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/salary-changes', require('./routes/bienDongLuong'));
+app.use('/api/thong-ke', require('./routes/thongKe'));
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'OK', time: new Date() }));

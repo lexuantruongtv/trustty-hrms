@@ -3,10 +3,12 @@ import {
   Box, Card, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Button, IconButton, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Grid, Tooltip, MenuItem, Select, FormControl, InputLabel,
+  InputAdornment, Stack,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SearchIcon from '@mui/icons-material/Search';
 import { useForm, Controller } from 'react-hook-form';
 import api from '../api/axios';
 import { getEmployees } from '../api/employees';
@@ -14,6 +16,7 @@ import PageHeader from '../components/common/PageHeader';
 import EmptyState from '../components/common/EmptyState';
 import useToast from '../hooks/useToast';
 import useAuthStore from '../store/authStore';
+import { BANG_CAP } from '../constants';
 
 const EduForm = ({ open, onClose, onSave, initial, employees }) => {
   const { control, handleSubmit, reset } = useForm({ defaultValues: initial || {} });
@@ -35,8 +38,18 @@ const EduForm = ({ open, onClose, onSave, initial, employees }) => {
                   </FormControl>
                 )} />
             </Grid>
+            <Grid item xs={12}>
+              <Controller name="TenBangCap" control={control}
+                render={({ field }) => (
+                  <FormControl fullWidth>
+                    <InputLabel>Bằng cấp</InputLabel>
+                    <Select {...field} label="Bằng cấp">
+                      {BANG_CAP.map((b) => <MenuItem key={b} value={b}>{b}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                )} />
+            </Grid>
             {[
-              { name: 'TenBangCap', label: 'Tên bằng cấp' },
               { name: 'ChuyenNganh', label: 'Chuyên ngành' },
               { name: 'NoiDaoTao', label: 'Nơi đào tạo' },
               { name: 'NamHoanThanh', label: 'Năm hoàn thành', type: 'number' },
@@ -65,6 +78,8 @@ const Education = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [employees, setEmployees] = useState([]);
+  const [search, setSearch] = useState('');
+  const [filterBangCap, setFilterBangCap] = useState('');
 
   useEffect(() => {
     getEmployees({ limit: 200 }).then((r) => setEmployees(r.data.data?.items || [])).catch(() => {});
@@ -99,12 +114,37 @@ const Education = () => {
     }
   };
 
+  const filtered = items.filter((td) => {
+    const matchSearch = !search || td.nhanVien?.TenNV?.toLowerCase().includes(search.toLowerCase());
+    const matchLoai = !filterBangCap || td.TenBangCap === filterBangCap;
+    return matchSearch && matchLoai;
+  });
+
   return (
     <Box>
-      <PageHeader title="Trình độ học vấn" subtitle={`${items.length} bản ghi`}
+      <PageHeader title="Trình độ học vấn" subtitle={`${filtered.length} bản ghi`}
         action={<Button variant="contained" startIcon={<AddIcon />} onClick={() => { setEditItem(null); setDialogOpen(true); }}>Thêm</Button>}
       />
       <Card>
+        <Stack direction="row" spacing={2} sx={{ p: 2, flexWrap: 'wrap' }}>
+          <TextField
+            placeholder="Tìm theo tên nhân viên..."
+            size="small"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            sx={{ minWidth: 240 }}
+            InputProps={{
+              startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment>,
+            }}
+          />
+          <FormControl size="small" sx={{ minWidth: 180 }}>
+            <InputLabel>Bằng cấp</InputLabel>
+            <Select value={filterBangCap} label="Bằng cấp" onChange={(e) => setFilterBangCap(e.target.value)}>
+              <MenuItem value="">Tất cả</MenuItem>
+              {BANG_CAP.map((b) => <MenuItem key={b} value={b}>{b}</MenuItem>)}
+            </Select>
+          </FormControl>
+        </Stack>
         <TableContainer>
           <Table>
             <TableHead>
@@ -119,9 +159,9 @@ const Education = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {items.length === 0 ? (
+              {filtered.length === 0 ? (
                 <TableRow><TableCell colSpan={7}><EmptyState message="Chưa có dữ liệu" /></TableCell></TableRow>
-              ) : items.map((td) => (
+              ) : filtered.map((td) => (
                 <TableRow key={td.MaTD} hover>
                   <TableCell sx={{ fontFamily: 'monospace', fontSize: 13, color: 'text.secondary' }}>{td.MaTD}</TableCell>
                   <TableCell>{td.nhanVien?.TenNV}</TableCell>

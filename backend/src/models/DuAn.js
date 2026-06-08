@@ -10,6 +10,7 @@ const DuAn = sequelize.define('DuAn', {
   NgayKT: { type: DataTypes.DATEONLY },
   ChiPhiDuKien: { type: DataTypes.DECIMAL(18, 2) },
   ChiPhiThucTe: { type: DataTypes.DECIMAL(18, 2) },
+  DoanhThu: { type: DataTypes.DECIMAL(18, 2), defaultValue: 0 },
   TienDo: { type: DataTypes.INTEGER, defaultValue: 0 },
 }, { tableName: 'DuAn', timestamps: false });
 
