@@ -1,4 +1,4 @@
-const { sequelize, DuAn, NhanVien, PhongBan, BangLuong, PhanCong, BienDongLuong } = require('../models');
+const { sequelize, DuAn, NhanVien, PhongBan, BangLuong, PhanCong, BienDongLuong, ChiPhiHoatDong } = require('../models');
 const { Op, fn, col, literal } = require('sequelize');
 
 // Tổng chi phí & doanh thu dự án đã hoàn thành/bàn giao
@@ -144,3 +144,74 @@ const getChiPhiTheoDuAn = async ({ nam }) => {
 };
 
 module.exports = { getThongKeDuAn, getBangLuongCongTy, getChiPhiTheoPhongBan, getChiPhiTheoDuAn };
+
+// Thống kê chênh lệch: doanh thu cộng dồn cả năm, chi phí trừ dần từng tháng → số dư tích lũy
+const getChenhLech = async ({ nam } = {}) => {
+  const n = parseInt(nam) || new Date().getFullYear();
+  const months = Array.from({ length: 12 }, (_, i) => i + 1);
+
+  // Tổng doanh thu cả năm (từ dự án hoàn thành trong năm)
+  const tongDoanhThuNam = parseFloat(await DuAn.sum('DoanhThu', {
+    where: {
+      [Op.and]: [
+        sequelize.where(fn('YEAR', col('NgayKT')), n),
+        { TrangThai: 'Hoàn thành' },
+      ],
+    },
+  }) || 0);
+
+  // Chi phí từng tháng
+  const monthlyData = await Promise.all(months.map(async (thang) => {
+    const chiPhiDuAn = parseFloat(await DuAn.sum('ChiPhiThucTe', {
+      where: {
+        [Op.and]: [
+          sequelize.where(fn('MONTH', col('NgayKT')), thang),
+          sequelize.where(fn('YEAR', col('NgayKT')), n),
+          { TrangThai: 'Hoàn thành' },
+        ],
+      },
+    }) || 0);
+    const tongLuong = parseFloat(await BangLuong.sum('ThucLinh', { where: { Thang: thang, Nam: n } }) || 0);
+    const chiPhiHD = parseFloat(await ChiPhiHoatDong.sum('SoTien', { where: { Thang: thang, Nam: n } }) || 0);
+    return { thang, chiPhiDuAn, tongLuong, chiPhiHD, tongChiPhi: chiPhiDuAn + tongLuong + chiPhiHD };
+  }));
+
+  // Tính số dư tích lũy: bắt đầu từ tổng doanh thu, trừ dần chi phí từng tháng
+  let soDu = tongDoanhThuNam;
+  const items = monthlyData
+    .filter((r) => r.tongChiPhi > 0) // chỉ hiện tháng có chi phí
+    .map((r) => {
+      soDu -= r.tongChiPhi;
+      return {
+        thang: r.thang,
+        nam: n,
+        chiPhiDuAn: r.chiPhiDuAn,
+        tongLuong: r.tongLuong,
+        chiPhiHD: r.chiPhiHD,
+        tongChiPhi: r.tongChiPhi,
+        soDuTichLuy: soDu,
+      };
+    });
+
+  const tongChiPhi = items.reduce((s, r) => s + r.tongChiPhi, 0);
+  const ketQua = tongDoanhThuNam - tongChiPhi;
+
+  return { items, tongDoanhThuNam, tongChiPhi, ketQua, thuaLo: ketQua < 0, nam: n };
+};
+
+// CRUD chi phí hoạt động
+const getChiPhiHoatDong = async ({ thang, nam }) => {
+  const where = {};
+  if (thang) where.Thang = thang;
+  if (nam) where.Nam = nam;
+  return ChiPhiHoatDong.findAll({ where, order: [['Nam', 'DESC'], ['Thang', 'DESC']] });
+};
+
+const createChiPhiHoatDong = async (data) => ChiPhiHoatDong.create(data);
+const deleteChiPhiHoatDong = async (id) => {
+  const cp = await ChiPhiHoatDong.findByPk(id);
+  if (!cp) throw { status: 404, message: 'Không tìm thấy' };
+  await cp.destroy();
+};
+
+module.exports = { getThongKeDuAn, getBangLuongCongTy, getChiPhiTheoPhongBan, getChiPhiTheoDuAn, getChenhLech, getChiPhiHoatDong, createChiPhiHoatDong, deleteChiPhiHoatDong };

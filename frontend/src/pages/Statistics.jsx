@@ -2,15 +2,18 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Box, Card, CardContent, Grid2 as Grid, Typography, Tab, Tabs, Table, TableHead,
   TableRow, TableCell, TableBody, TableContainer, Chip, MenuItem, Select,
-  FormControl, InputLabel, Stack,
+  FormControl, InputLabel, Stack, Button, IconButton, Tooltip, TextField, Dialog,
+  DialogTitle, DialogContent, DialogActions,
 } from '@mui/material';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer, Legend, LineChart, Line, ReferenceLine,
 } from 'recharts';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
 import PageHeader from '../components/common/PageHeader';
 import EmptyState from '../components/common/EmptyState';
 import { formatCurrency } from '../utils/format';
-import { getThongKeDuAn, getBangLuongCongTy } from '../api/thongKe';
+import { getThongKeDuAn, getBangLuongCongTy, getChenhLech, getChiPhiHoatDong, createChiPhiHoatDong, deleteChiPhiHoatDong } from '../api/thongKe';
 
 const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - i);
@@ -30,12 +33,14 @@ const TabDuAn = () => {
   const [data, setData] = useState(null);
   const [nam, setNam] = useState('');
 
-  const fetch = useCallback(async () => {
-    const res = await getThongKeDuAn(nam ? { nam } : {});
-    setData(res.data.data);
+  const loadData = useCallback(async () => {
+    try {
+      const res = await getThongKeDuAn(nam ? { nam } : {});
+      setData(res.data.data);
+    } catch { setData({ items: [], tongDoanhThu: 0, tongChiPhiThucTe: 0, tongLoiNhuan: 0, tongChenhLech: 0 }); }
   }, [nam]);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => { loadData(); }, [loadData]);
 
   const trangThaiColor = (t) => ({ 'Hoàn thành': 'success', 'Đang thực hiện': 'primary', 'Tạm dừng': 'warning', 'Hủy': 'error' }[t] || 'default');
 
@@ -136,15 +141,17 @@ const TabDuAn = () => {
 // ── Tab 2: Bảng lương công ty ──────────────────────────────────────────────
 const TabBangLuong = () => {
   const [data, setData] = useState(null);
-  const [thang, setThang] = useState(new Date().getMonth() + 1);
-  const [nam, setNam] = useState(CURRENT_YEAR);
+  const [thang, setThang] = useState(8);
+  const [nam, setNam] = useState(2025);
 
-  const fetch = useCallback(async () => {
-    const res = await getBangLuongCongTy({ thang, nam });
-    setData(res.data.data);
+  const loadData = useCallback(async () => {
+    try {
+      const res = await getBangLuongCongTy({ thang, nam });
+      setData(res.data.data);
+    } catch { setData({ items: [], tongLuongCB: 0, tongPhuCap: 0, tongThue: 0, tongThucLinh: 0 }); }
   }, [thang, nam]);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => { loadData(); }, [loadData]);
 
   return (
     <Box>
@@ -217,6 +224,230 @@ const TabBangLuong = () => {
   );
 };
 
+// ── Tab 3: Thống kê chênh lệch ────────────────────────────────────────────
+const LOAI_CHI_PHI = ['Thuê văn phòng', 'Điện nước', 'Thiết bị & CCDC', 'Marketing', 'Đào tạo', 'Khác'];
+
+const TabChenhLech = () => {
+  const [data, setData] = useState(null);
+  const [chiPhis, setChiPhis] = useState([]);
+  const [nam, setNam] = useState(CURRENT_YEAR);
+  const [formOpen, setFormOpen] = useState(false);
+  const [form, setForm] = useState({ Thang: new Date().getMonth() + 1, Nam: CURRENT_YEAR, LoaiChiPhi: '', SoTien: '', GhiChu: '' });
+
+  const loadData = useCallback(async () => {
+    try {
+      const [r1, r2] = await Promise.all([getChenhLech({ nam }), getChiPhiHoatDong({ nam })]);
+      setData(r1.data.data);
+      setChiPhis(r2.data.data || []);
+    } catch { setData({ items: [], tongDoanhThuNam: 0, tongChiPhi: 0, ketQua: 0, thuaLo: false, nam }); }
+  }, [nam]);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const handleAdd = async () => {
+    if (!form.LoaiChiPhi || !form.SoTien) return;
+    try {
+      await createChiPhiHoatDong({ ...form, SoTien: +form.SoTien });
+      setFormOpen(false);
+      setForm({ Thang: new Date().getMonth() + 1, Nam: CURRENT_YEAR, LoaiChiPhi: '', SoTien: '', GhiChu: '' });
+      loadData();
+    } catch { }
+  };
+
+  const handleDelete = async (id) => {
+    try { await deleteChiPhiHoatDong(id); loadData(); } catch { }
+  };
+
+  const chartData = data?.items?.map((r) => ({
+    name: `T${r.thang}`,
+    'Chi phí tháng': r.tongChiPhi,
+    'Số dư tích lũy': r.soDuTichLuy,
+  })) || [];
+
+  return (
+    <Box>
+      <Stack direction="row" spacing={2} sx={{ mb: 3 }} alignItems="center">
+        <FormControl size="small" sx={{ minWidth: 140 }}>
+          <InputLabel>Năm</InputLabel>
+          <Select value={nam} label="Năm" onChange={(e) => setNam(e.target.value)}>
+            {YEARS.map((y) => <MenuItem key={y} value={y}>{y}</MenuItem>)}
+          </Select>
+        </FormControl>
+        <Button variant="outlined" size="small" startIcon={<AddIcon />} onClick={() => setFormOpen(true)}>
+          Thêm chi phí HĐ
+        </Button>
+      </Stack>
+
+      {data && (
+        <>
+          <Grid container spacing={2} sx={{ mb: 3 }}>
+            <Grid size={{ xs: 12, sm: 4 }}><SummaryCard label="Tổng doanh thu cả năm" value={formatCurrency(data.tongDoanhThuNam)} color="#6366f1" /></Grid>
+            <Grid size={{ xs: 12, sm: 4 }}><SummaryCard label="Tổng chi phí" value={formatCurrency(data.tongChiPhi)} color="#f59e0b" /></Grid>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <Card sx={{ borderTop: `4px solid ${data.thuaLo ? '#ef4444' : '#10b981'}` }}>
+                <CardContent>
+                  <Typography variant="caption" color="text.secondary">Kết quả cuối năm</Typography>
+                  <Typography variant="h6" fontWeight={700} sx={{ color: data.thuaLo ? '#ef4444' : '#10b981' }}>
+                    {formatCurrency(data.ketQua)}
+                  </Typography>
+                  <Typography variant="caption" fontWeight={700} sx={{ color: data.thuaLo ? '#ef4444' : '#10b981' }}>
+                    {data.thuaLo ? '⚠️ Công ty đang thua lỗ' : '✅ Công ty có lãi'}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+
+          {chartData.length > 0 && (
+            <Card sx={{ mb: 3 }}>
+              <CardContent sx={{ p: 3 }}>
+                <Typography fontWeight={700} mb={0.5}>
+                  Số dư tích lũy theo tháng năm {nam}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
+                  Bắt đầu từ tổng doanh thu {formatCurrency(data.tongDoanhThuNam)}, trừ dần chi phí mỗi tháng
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 3, mb: 1.5, flexWrap: 'wrap' }}>
+                  {[{ color: '#f59e0b', label: 'Chi phí tháng' }, { color: '#6366f1', label: 'Số dư tích lũy' }].map((i) => (
+                    <Box key={i.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                      <Box sx={{ width: 12, height: 12, borderRadius: 1, bgcolor: i.color, flexShrink: 0 }} />
+                      <Typography variant="caption" color="text.secondary">{i.label}</Typography>
+                    </Box>
+                  ))}
+                </Box>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                    <YAxis tickFormatter={(v) => `${(v / 1e6).toFixed(0)}M`} tick={{ fontSize: 11 }} />
+                    <Tooltip formatter={(v) => formatCurrency(v)} />
+                    <ReferenceLine y={0} stroke="#ef4444" strokeDasharray="4 2" label={{ value: 'Hòa vốn', position: 'insideTopRight', fontSize: 11, fill: '#ef4444' }} />
+                    <Line type="monotone" dataKey="Chi phí tháng" stroke="#f59e0b" strokeWidth={2} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="Số dư tích lũy" stroke="#6366f1" strokeWidth={2.5} dot={{ r: 5 }} activeDot={{ r: 7 }}
+                      label={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+
+          {chartData.length === 0 && <EmptyState message={`Chưa có dữ liệu năm ${nam}`} />}
+
+          {/* Bảng chi tiết */}
+          {chartData.length > 0 && (
+            <Card sx={{ mb: 3 }}>
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow sx={{ '& th': { fontWeight: 700, bgcolor: 'action.hover' } }}>
+                      <TableCell>Tháng</TableCell>
+                      <TableCell align="right">CP dự án</TableCell>
+                      <TableCell align="right">Lương NV</TableCell>
+                      <TableCell align="right">CP hoạt động</TableCell>
+                      <TableCell align="right">Tổng chi phí tháng</TableCell>
+                      <TableCell align="right">Số dư tích lũy</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {data.items.map((r) => (
+                      <TableRow key={r.thang} hover>
+                        <TableCell sx={{ fontWeight: 600 }}>Tháng {r.thang}/{r.nam}</TableCell>
+                        <TableCell align="right">{formatCurrency(r.chiPhiDuAn)}</TableCell>
+                        <TableCell align="right">{formatCurrency(r.tongLuong)}</TableCell>
+                        <TableCell align="right">{formatCurrency(r.chiPhiHD)}</TableCell>
+                        <TableCell align="right" sx={{ color: 'warning.main', fontWeight: 600 }}>-{formatCurrency(r.tongChiPhi)}</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 700, color: r.soDuTichLuy >= 0 ? 'success.main' : 'error.main' }}>
+                          {formatCurrency(r.soDuTichLuy)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Card>
+          )}
+
+          {/* Bảng chi phí hoạt động */}
+          <Card>
+            <CardContent sx={{ pb: '8px !important', pt: 2, px: 2 }}>
+              <Typography fontWeight={700} mb={1.5}>Chi phí hoạt động đã nhập năm {nam}</Typography>
+            </CardContent>
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ '& th': { fontWeight: 700, bgcolor: 'action.hover' } }}>
+                    <TableCell>Tháng</TableCell>
+                    <TableCell>Loại chi phí</TableCell>
+                    <TableCell align="right">Số tiền</TableCell>
+                    <TableCell>Ghi chú</TableCell>
+                    <TableCell align="center">Xóa</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {chiPhis.length === 0
+                    ? <TableRow><TableCell colSpan={5}><EmptyState message="Chưa có chi phí hoạt động" /></TableCell></TableRow>
+                    : chiPhis.map((cp) => (
+                      <TableRow key={cp.MaCPHD} hover>
+                        <TableCell>T{cp.Thang}/{cp.Nam}</TableCell>
+                        <TableCell>{cp.LoaiChiPhi}</TableCell>
+                        <TableCell align="right" sx={{ color: 'error.main' }}>{formatCurrency(cp.SoTien)}</TableCell>
+                        <TableCell sx={{ color: 'text.secondary' }}>{cp.GhiChu || '—'}</TableCell>
+                        <TableCell align="center">
+                          <Tooltip title="Xóa">
+                            <IconButton size="small" color="error" onClick={() => handleDelete(cp.MaCPHD)}>
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Card>
+        </>
+      )}
+
+      {/* Dialog thêm chi phí */}
+      <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Thêm chi phí hoạt động</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <Stack direction="row" spacing={2}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Tháng</InputLabel>
+                <Select value={form.Thang} label="Tháng" onChange={(e) => setForm((f) => ({ ...f, Thang: e.target.value }))}>
+                  {MONTHS.map((m) => <MenuItem key={m} value={m}>Tháng {m}</MenuItem>)}
+                </Select>
+              </FormControl>
+              <FormControl fullWidth size="small">
+                <InputLabel>Năm</InputLabel>
+                <Select value={form.Nam} label="Năm" onChange={(e) => setForm((f) => ({ ...f, Nam: e.target.value }))}>
+                  {YEARS.map((y) => <MenuItem key={y} value={y}>{y}</MenuItem>)}
+                </Select>
+              </FormControl>
+            </Stack>
+            <FormControl fullWidth size="small">
+              <InputLabel>Loại chi phí</InputLabel>
+              <Select value={form.LoaiChiPhi} label="Loại chi phí" onChange={(e) => setForm((f) => ({ ...f, LoaiChiPhi: e.target.value }))}>
+                {LOAI_CHI_PHI.map((l) => <MenuItem key={l} value={l}>{l}</MenuItem>)}
+              </Select>
+            </FormControl>
+            <TextField size="small" label="Số tiền (VNĐ)" type="number" fullWidth value={form.SoTien}
+              onChange={(e) => setForm((f) => ({ ...f, SoTien: e.target.value }))} />
+            <TextField size="small" label="Ghi chú" fullWidth value={form.GhiChu}
+              onChange={(e) => setForm((f) => ({ ...f, GhiChu: e.target.value }))} />
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button onClick={() => setFormOpen(false)} variant="outlined">Hủy</Button>
+          <Button onClick={handleAdd} variant="contained">Thêm</Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+};
+
 // ── Main page ──────────────────────────────────────────────────────────────
 const Statistics = () => {
   const [tab, setTab] = useState(0);
@@ -228,11 +459,13 @@ const Statistics = () => {
         <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ px: 2 }} variant="scrollable">
           <Tab label="Thống kê dự án" />
           <Tab label="Bảng lương công ty" />
+          <Tab label="Thống kê chênh lệch" />
         </Tabs>
       </Card>
       <Box>
         {tab === 0 && <TabDuAn />}
         {tab === 1 && <TabBangLuong />}
+        {tab === 2 && <TabChenhLech />}
       </Box>
     </Box>
   );

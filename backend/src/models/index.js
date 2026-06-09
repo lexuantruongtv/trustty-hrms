@@ -14,6 +14,7 @@ const HopDong = require('./HopDong');
 const TrinhDo = require('./TrinhDo');
 const ThongBao = require('./ThongBao');
 const GhiChuDuAn = require('./GhiChuDuAn');
+const ChiPhiHoatDong = require('./ChiPhiHoatDong');
 
 // PhongBan <-> NhanVien
 PhongBan.hasMany(NhanVien, { foreignKey: 'MaPB', as: 'nhanViens' });
@@ -88,4 +89,5 @@ module.exports = {
   TrinhDo,
   ThongBao,
   GhiChuDuAn,
+  ChiPhiHoatDong,
 };
