@@ -1,4 +1,4 @@
-const { BangLuong, NhanVien, BienDongLuong } = require('../models');
+const { BangLuong, NhanVien, BienDongLuong, ChucVu, PhongBan } = require('../models');
 const { sequelize } = require('../models');
 const { Op, fn, col, literal } = require('sequelize');
 const { getPagination, getPagingData } = require('../utils/pagination');
@@ -16,9 +16,14 @@ const getAll = async (query) => {
   const data = await BangLuong.findAndCountAll({
     where, limit, offset,
     include: [{
-      model: NhanVien, as: 'nhanVien', attributes: ['TenNV', 'Avatar', 'MaPB'],
+      model: NhanVien, as: 'nhanVien',
+      attributes: ['MaNV1', 'TenNV', 'Avatar', 'MaPB', 'MaCV', 'Email', 'SDT', 'SoTaiKhoanNN'],
       where: Object.keys(includeWhere).length ? includeWhere : undefined,
       required: Object.keys(includeWhere).length > 0,
+      include: [
+        { model: ChucVu, as: 'chucVu', attributes: ['TenCV'] },
+        { model: PhongBan, as: 'phongBan', attributes: ['TenPB'] },
+      ],
     }],
     order: [['Nam', 'DESC'], ['Thang', 'DESC']],
   });
@@ -46,18 +51,26 @@ const getAll = async (query) => {
 
 /**
  * Tính lương tự động cho nhân viên theo tháng
- * Công thức: ThucLinh = LuongCB + PhuCap - ThueTNCN (10%)
+ * Khấu trừ:
+ *   - Thuế TNCN  : 10%   lương cơ bản
+ *   - BHXH       : 8%    lương cơ bản (hưu trí & tử tuất)
+ *   - BHYT       : 1.5%  lương cơ bản (bảo hiểm y tế)
+ *   - BHTN       : 1%    lương cơ bản (bảo hiểm thất nghiệp)
+ * Công thức: ThucLinh = LuongCB + PhuCap - ThueTNCN - BHXH - BHYT - BHTN
  */
 const tinhLuong = async ({ MaNV1, Thang, Nam, LuongCB, PhuCap }) => {
   const MaBL = `BL${MaNV1}${Nam}${String(Thang).padStart(2, '0')}`;
-  const ThueTNCN = parseFloat(((LuongCB * 0.1)).toFixed(2));
-  const ThucLinh = parseFloat((LuongCB + PhuCap - ThueTNCN).toFixed(2));
+  const ThueTNCN = parseFloat((LuongCB * 0.10).toFixed(2));
+  const BHXH     = parseFloat((LuongCB * 0.08).toFixed(2));
+  const BHYT     = parseFloat((LuongCB * 0.015).toFixed(2));
+  const BHTN     = parseFloat((LuongCB * 0.01).toFixed(2));
+  const ThucLinh = parseFloat((LuongCB + PhuCap - ThueTNCN - BHXH - BHYT - BHTN).toFixed(2));
 
   const [bl, created] = await BangLuong.findOrCreate({
     where: { MaBL },
-    defaults: { MaNV1, Thang, Nam, LuongCB, PhuCap, ThueTNCN, ThucLinh },
+    defaults: { MaNV1, Thang, Nam, LuongCB, PhuCap, ThueTNCN, BHXH, BHYT, BHTN, ThucLinh },
   });
-  if (!created) await bl.update({ LuongCB, PhuCap, ThueTNCN, ThucLinh });
+  if (!created) await bl.update({ LuongCB, PhuCap, ThueTNCN, BHXH, BHYT, BHTN, ThucLinh });
   return bl;
 };
 
