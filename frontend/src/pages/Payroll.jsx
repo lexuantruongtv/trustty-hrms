@@ -3,10 +3,11 @@ import {
   Box, Card, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   TablePagination, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Typography, Avatar, MenuItem, Select, FormControl, InputLabel, Grid,
-  IconButton, Tooltip,
+  IconButton, Tooltip, InputAdornment, Stack,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SearchIcon from '@mui/icons-material/Search';
 import { useForm, Controller } from 'react-hook-form';
 import { getPayroll, calculatePayroll, deletePayroll } from '../api/payroll';
 import { getEmployees } from '../api/employees';
@@ -78,19 +79,25 @@ const Payroll = () => {
   const [page, setPage] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [employees, setEmployees] = useState([]);
+  const [search, setSearch] = useState('');
+  const [filterThang, setFilterThang] = useState('');
+  const [filterNam, setFilterNam] = useState('');
   const canManage = ['Admin', 'Ketoan'].includes(user?.PhanQuyen);
 
   const fetchData = useCallback(async () => {
     try {
       const params = { page: page + 1, limit: 10 };
-      // Chỉ Admin và Kế toán mới xem tất cả
       if (!['Admin', 'Ketoan'].includes(user?.PhanQuyen)) params.MaNV1 = user.MaNV1;
+      if (search) params.search = search;
+      if (filterThang) params.Thang = filterThang;
+      if (filterNam) params.Nam = filterNam;
       const res = await getPayroll(params);
       setData(res.data.data);
     } catch { }
-  }, [page, user]);
+  }, [page, user, search, filterThang, filterNam]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { setPage(0); }, [search, filterThang, filterNam]);
   useEffect(() => {
     if (canManage) getEmployees({ limit: 100 }).then((r) => setEmployees(r.data.data?.items || []));
   }, [canManage]);
@@ -118,6 +125,32 @@ const Payroll = () => {
         action={canManage && <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>Tính lương</Button>}
       />
       <Card>
+        <Stack direction="row" spacing={2} sx={{ p: 2, flexWrap: 'wrap' }}>
+          {canManage && (
+            <TextField
+              placeholder="Tìm theo tên nhân viên..."
+              size="small"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              sx={{ minWidth: 220 }}
+              InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
+            />
+          )}
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Tháng</InputLabel>
+            <Select value={filterThang} label="Tháng" onChange={(e) => setFilterThang(e.target.value)}>
+              <MenuItem value="">Tất cả</MenuItem>
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => <MenuItem key={m} value={m}>Tháng {m}</MenuItem>)}
+            </Select>
+          </FormControl>
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Năm</InputLabel>
+            <Select value={filterNam} label="Năm" onChange={(e) => setFilterNam(e.target.value)}>
+              <MenuItem value="">Tất cả</MenuItem>
+              {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map((y) => <MenuItem key={y} value={y}>{y}</MenuItem>)}
+            </Select>
+          </FormControl>
+        </Stack>
         <TableContainer>
           <Table>
             <TableHead>

@@ -10,9 +10,16 @@ const getAll = async (query) => {
   if (query.Thang) where.Thang = query.Thang;
   if (query.Nam) where.Nam = query.Nam;
 
+  const includeWhere = {};
+  if (query.search) includeWhere.TenNV = { [Op.like]: `%${query.search}%` };
+
   const data = await BangLuong.findAndCountAll({
     where, limit, offset,
-    include: [{ model: NhanVien, as: 'nhanVien', attributes: ['TenNV', 'Avatar', 'MaPB'] }],
+    include: [{
+      model: NhanVien, as: 'nhanVien', attributes: ['TenNV', 'Avatar', 'MaPB'],
+      where: Object.keys(includeWhere).length ? includeWhere : undefined,
+      required: Object.keys(includeWhere).length > 0,
+    }],
     order: [['Nam', 'DESC'], ['Thang', 'DESC']],
   });
 
