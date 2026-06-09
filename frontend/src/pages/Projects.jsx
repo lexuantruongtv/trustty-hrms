@@ -4,7 +4,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem,
   Select, FormControl, InputLabel, LinearProgress, Tooltip, Divider,
   Avatar, List, ListItem, ListItemAvatar, ListItemText, ListItemSecondaryAction,
-  Slider, CircularProgress, Collapse,
+  Slider, CircularProgress, Collapse, InputAdornment, Stack,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -16,6 +16,7 @@ import SendIcon from '@mui/icons-material/Send';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import SearchIcon from '@mui/icons-material/Search';
 import { motion } from 'framer-motion';
 import { useForm, Controller } from 'react-hook-form';
 import { getProjects, createProject, updateProject, deleteProject, assignMember, removeAssign, getNotes, addNote, getNvChuaThamGia } from '../api/projects';
@@ -333,13 +334,15 @@ const Projects = () => {
   const [detailProject, setDetailProject] = useState(null);
   const [nvChuaThamGia, setNvChuaThamGia] = useState([]);
   const [showNvRanh, setShowNvRanh] = useState(false);
+  const [search, setSearch] = useState('');
+  const [filterTrangThai, setFilterTrangThai] = useState('');
 
   const fetchData = useCallback(async () => {
     try {
-      const res = await getProjects({ limit: 50 });
+      const res = await getProjects({ limit: 50, search: search || undefined, TrangThai: filterTrangThai || undefined });
       setData(res.data.data);
     } catch { }
-  }, []);
+  }, [search, filterTrangThai]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
   useEffect(() => { getNvChuaThamGia().then((r) => setNvChuaThamGia(r.data.data || [])).catch(() => {}); }, []);
@@ -348,7 +351,7 @@ const Projects = () => {
   const handleUpdated = async () => {
     await fetchData();
     if (detailProject) {
-      const res = await getProjects({ limit: 50 });
+      const res = await getProjects({ limit: 50, search: search || undefined, TrangThai: filterTrangThai || undefined });
       const updated = res.data.data.items?.find((p) => p.MaDOAN === detailProject.MaDOAN);
       if (updated) setDetailProject(updated);
     }
@@ -389,6 +392,65 @@ const Projects = () => {
         action={<Button variant="contained" startIcon={<AddIcon />}
           onClick={() => { setEditItem(null); setDialogOpen(true); }}>Tạo dự án</Button>}
       />
+
+      <Stack direction="row" spacing={2} sx={{ mb: 2, flexWrap: 'wrap' }}>
+        <TextField
+          placeholder="Tìm tên dự án..."
+          size="small"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          sx={{ minWidth: 240 }}
+          InputProps={{
+            startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment>,
+          }}
+        />
+        <FormControl size="small" sx={{ minWidth: 180 }}>
+          <InputLabel>Trạng thái</InputLabel>
+          <Select value={filterTrangThai} label="Trạng thái" onChange={(e) => setFilterTrangThai(e.target.value)}>
+            <MenuItem value="">Tất cả</MenuItem>
+            {TRANG_THAI_DA.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+          </Select>
+        </FormControl>
+      </Stack>
+
+      {/* Panel NV Phòng KT chưa tham gia dự án */}
+      <Card sx={{ mb: 3, borderLeft: '4px solid #f59e0b' }}>
+        <CardContent sx={{ p: 2, pb: '12px !important' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+            onClick={() => setShowNvRanh((v) => !v)}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <WarningAmberIcon sx={{ color: '#f59e0b', fontSize: 20 }} />
+              <Typography fontWeight={700} variant="body1">
+                Nhân viên Phòng Kỹ Thuật chưa tham gia dự án nào
+              </Typography>
+              <Chip label={nvChuaThamGia.length} size="small" sx={{ bgcolor: '#f59e0b', color: '#fff', fontWeight: 700 }} />
+            </Box>
+            {showNvRanh ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          </Box>
+          <Collapse in={showNvRanh}>
+            <Divider sx={{ my: 1.5 }} />
+            {nvChuaThamGia.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">Tất cả nhân viên đã tham gia dự án</Typography>
+            ) : (
+              <Grid container spacing={1.5} sx={{ mt: 0.5 }}>
+                {nvChuaThamGia.map((nv) => (
+                  <Grid item xs={12} sm={6} md={4} key={nv.MaNV1}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.5, borderRadius: 2, bgcolor: 'action.hover' }}>
+                      <Avatar sx={{ width: 36, height: 36, bgcolor: '#6366f1', fontSize: 13, fontWeight: 700 }}>
+                        {getInitials(nv.TenNV)}
+                      </Avatar>
+                      <Box>
+                        <Typography variant="body2" fontWeight={600}>{nv.TenNV}</Typography>
+                        <Typography variant="caption" color="text.secondary">{nv.chucVu?.TenCV || nv.MaNV1}</Typography>
+                      </Box>
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
+            )}
+          </Collapse>
+        </CardContent>
+      </Card>
 
       {data.items.length === 0 ? <EmptyState message="Chưa có dự án nào" /> : (
         <Grid container spacing={3}>
@@ -449,45 +511,6 @@ const Projects = () => {
           ))}
         </Grid>
       )}
-
-      {/* Panel NV Phòng KT chưa tham gia dự án */}
-      <Card sx={{ mt: 3, borderLeft: '4px solid #f59e0b' }}>
-        <CardContent sx={{ p: 2, pb: '12px !important' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
-            onClick={() => setShowNvRanh((v) => !v)}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <WarningAmberIcon sx={{ color: '#f59e0b', fontSize: 20 }} />
-              <Typography fontWeight={700} variant="body1">
-                Nhân viên Phòng Kỹ Thuật chưa tham gia dự án nào
-              </Typography>
-              <Chip label={nvChuaThamGia.length} size="small" sx={{ bgcolor: '#f59e0b', color: '#fff', fontWeight: 700 }} />
-            </Box>
-            {showNvRanh ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-          </Box>
-          <Collapse in={showNvRanh}>
-            <Divider sx={{ my: 1.5 }} />
-            {nvChuaThamGia.length === 0 ? (
-              <Typography variant="body2" color="text.secondary">Tất cả nhân viên đã tham gia dự án</Typography>
-            ) : (
-              <Grid container spacing={1.5} sx={{ mt: 0.5 }}>
-                {nvChuaThamGia.map((nv) => (
-                  <Grid item xs={12} sm={6} md={4} key={nv.MaNV1}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.5, borderRadius: 2, bgcolor: 'action.hover' }}>
-                      <Avatar sx={{ width: 36, height: 36, bgcolor: '#6366f1', fontSize: 13, fontWeight: 700 }}>
-                        {getInitials(nv.TenNV)}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="body2" fontWeight={600}>{nv.TenNV}</Typography>
-                        <Typography variant="caption" color="text.secondary">{nv.chucVu?.TenCV || nv.MaNV1}</Typography>
-                      </Box>
-                    </Box>
-                  </Grid>
-                ))}
-              </Grid>
-            )}
-          </Collapse>
-        </CardContent>
-      </Card>
 
       <ProjectForm open={dialogOpen} onClose={() => setDialogOpen(false)}
         onSave={handleSave} initial={editItem} />

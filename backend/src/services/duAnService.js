@@ -10,6 +10,8 @@ const getAll = async (query) => {
 
   const data = await DuAn.findAndCountAll({
     where, limit, offset,
+    distinct: true,
+    col: 'MaDOAN',
     include: [{ model: NhanVien, as: 'nhanViens', through: { attributes: ['VaiTro', 'ThoiGianTG'] } }],
     order: [['NgayBD', 'DESC']],
   });

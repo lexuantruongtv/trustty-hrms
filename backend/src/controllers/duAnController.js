@@ -96,11 +96,19 @@ const getNvChuaThamGia = async (req, res, next) => {
     const phongKT = await PhongBan.findOne({ where: { TenPB: { [Op.like]: '%Kỹ Thuật%' } } });
     if (!phongKT) return success(res, []);
 
+    // Chỉ loại trừ NV đang tham gia dự án có trạng thái "Đang thực hiện"
     const nvChuaThamGia = await NhanVien.findAll({
       where: {
         MaPB: phongKT.MaPB,
         TrangThai: 'Đang làm việc',
-        MaNV1: { [Op.notIn]: literal('(SELECT DISTINCT MaNV1 FROM PhanCong)') },
+        MaNV1: {
+          [Op.notIn]: literal(`(
+            SELECT DISTINCT pc.MaNV1
+            FROM PhanCong pc
+            INNER JOIN DuAn da ON pc.MaDOAN = da.MaDOAN
+            WHERE da.TrangThai = 'Đang thực hiện'
+          )`),
+        },
       },
       attributes: ['MaNV1', 'TenNV', 'Email', 'SDT'],
       include: [{ model: ChucVu, as: 'chucVu', attributes: ['TenCV'] }],
