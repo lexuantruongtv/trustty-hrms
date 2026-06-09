@@ -6,6 +6,7 @@ import {
   Avatar, List, ListItem, ListItemAvatar, ListItemText, ListItemSecondaryAction,
   Slider, CircularProgress, Collapse, InputAdornment, Stack,
 } from '@mui/material';
+import SearchableEmployeeSelect from '../components/common/SearchableEmployeeSelect';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -218,14 +219,12 @@ const ProjectDetail = ({ open, onClose, project, onUpdated }) => {
           <Grid container spacing={1.5} alignItems="flex-start">
             <Grid item xs={12} sm={5}>
               <Controller name="MaNV1" control={control} render={({ field }) => (
-                <FormControl fullWidth size="small">
-                  <InputLabel>Nhân viên</InputLabel>
-                  <Select {...field} label="Nhân viên">
-                    {available.map((e) => (
-                      <MenuItem key={e.MaNV1} value={e.MaNV1}>{e.TenNV}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <SearchableEmployeeSelect
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  employees={available}
+                  size="small"
+                />
               )} />
             </Grid>
             <Grid item xs={12} sm={4}>

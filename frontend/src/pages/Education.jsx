@@ -5,6 +5,7 @@ import {
   TextField, Grid, Tooltip, MenuItem, Select, FormControl, InputLabel,
   InputAdornment, Stack,
 } from '@mui/material';
+import SearchableEmployeeSelect from '../components/common/SearchableEmployeeSelect';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -30,12 +31,11 @@ const EduForm = ({ open, onClose, onSave, initial, employees }) => {
             <Grid item xs={12}>
               <Controller name="MaNV1" control={control} rules={{ required: true }}
                 render={({ field }) => (
-                  <FormControl fullWidth>
-                    <InputLabel>Nhân viên</InputLabel>
-                    <Select {...field} label="Nhân viên">
-                      {employees.map((e) => <MenuItem key={e.MaNV1} value={e.MaNV1}>{e.TenNV}</MenuItem>)}
-                    </Select>
-                  </FormControl>
+                  <SearchableEmployeeSelect
+                    value={field.value ?? ''}
+                    onChange={field.onChange}
+                    employees={employees}
+                  />
                 )} />
             </Grid>
             <Grid item xs={12}>

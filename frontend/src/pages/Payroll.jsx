@@ -3,8 +3,7 @@ import {
   DialogTitle, Divider, FormControl, IconButton, InputAdornment, InputLabel,
   MenuItem, Select, Stack, Table, TableBody, TableCell, TableContainer,
   TableHead, TablePagination, TableRow, TextField, Tooltip, Typography,
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+} from '@mui/material';import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PrintIcon from '@mui/icons-material/Print';
@@ -17,6 +16,7 @@ import { calculatePayroll, deletePayroll, getPayroll } from '../api/payroll';
 import { getEmployees } from '../api/employees';
 import EmptyState from '../components/common/EmptyState';
 import PageHeader from '../components/common/PageHeader';
+import SearchableEmployeeSelect from '../components/common/SearchableEmployeeSelect';
 import useToast from '../hooks/useToast';
 import useAuthStore from '../store/authStore';
 import { formatCurrency, getInitials } from '../utils/format';
@@ -45,7 +45,7 @@ const calcBH = (bl) => {
   return { bhxh, bhyt, bhtn, thue, thucLinh };
 };
 
-// ─── HTML Print ──────────────────────────────────────────────────────────────
+// ─── PDF / Print ──────────────────────────────────────────────────────────────
 
 /**
  * Mở cửa sổ in HTML — hỗ trợ đầy đủ Unicode/tiếng Việt, màu sắc, layout.
@@ -466,12 +466,11 @@ const PayrollForm = ({ open, onClose, onSave, employees }) => {
           <Stack spacing={2} sx={{ mt: 0.5 }}>
             <Controller name="MaNV1" control={control} rules={{ required: true }}
               render={({ field }) => (
-                <FormControl fullWidth>
-                  <InputLabel>Nhân viên</InputLabel>
-                  <Select {...field} label="Nhân viên">
-                    {employees.map((e) => <MenuItem key={e.MaNV1} value={e.MaNV1}>{e.TenNV}</MenuItem>)}
-                  </Select>
-                </FormControl>
+                <SearchableEmployeeSelect
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  employees={employees}
+                />
               )}
             />
             <Stack direction="row" spacing={2}>
@@ -571,12 +570,12 @@ const ExportDialog = ({ open, onClose, employees, filterThang, filterNam }) => {
               </Select>
             </FormControl>
             {mode === 'single' && (
-              <FormControl fullWidth size="small">
-                <InputLabel>Nhân viên</InputLabel>
-                <Select value={maNV} label="Nhân viên" onChange={(e) => setMaNV(e.target.value)}>
-                  {employees.map((e) => <MenuItem key={e.MaNV1} value={e.MaNV1}>{e.TenNV}</MenuItem>)}
-                </Select>
-              </FormControl>
+              <SearchableEmployeeSelect
+                value={maNV}
+                onChange={(e) => setMaNV(e.target.value)}
+                employees={employees}
+                size="small"
+              />
             )}
             <Stack direction="row" spacing={2}>
               <FormControl fullWidth size="small">

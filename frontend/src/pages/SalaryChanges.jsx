@@ -5,6 +5,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions, TextField,
   Grid, MenuItem, Select, FormControl, InputLabel, CircularProgress,
 } from '@mui/material';
+import SearchableEmployeeSelect from '../components/common/SearchableEmployeeSelect';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useForm, Controller } from 'react-hook-form';
@@ -30,12 +31,11 @@ const SalaryChangeForm = ({ open, onClose, onSave, employees }) => {
             <Grid item xs={12}>
               <Controller name="MaNV1" control={control} rules={{ required: true }}
                 render={({ field }) => (
-                  <FormControl fullWidth>
-                    <InputLabel>Nhân viên</InputLabel>
-                    <Select {...field} label="Nhân viên">
-                      {employees.map((e) => <MenuItem key={e.MaNV1} value={e.MaNV1}>{e.TenNV}</MenuItem>)}
-                    </Select>
-                  </FormControl>
+                  <SearchableEmployeeSelect
+                    value={field.value ?? ''}
+                    onChange={field.onChange}
+                    employees={employees}
+                  />
                 )} />
             </Grid>
             <Grid item xs={12} sm={6}>
