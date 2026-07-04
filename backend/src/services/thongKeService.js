@@ -8,7 +8,7 @@ const getThongKeDuAn = async ({ nam } = {}) => {
 
   const duAns = await DuAn.findAll({
     where,
-    attributes: ['MaDOAN', 'TenDA', 'TrangThai', 'NgayBD', 'NgayKT', 'ChiPhiDuKien', 'ChiPhiThucTe', 'DoanhThu', 'TienDo'],
+    attributes: ['MaDOAN', 'TenDA', 'MoTa', 'TrangThai', 'NgayBD', 'NgayKT', 'ChiPhiDuKien', 'ChiPhiThucTe', 'DoanhThu', 'TienDo'],
     include: [{
       model: NhanVien, as: 'nhanViens', attributes: ['MaNV1', 'TenNV'],
       through: { attributes: ['VaiTro'] },
@@ -23,6 +23,7 @@ const getThongKeDuAn = async ({ nam } = {}) => {
     return {
       MaDOAN: da.MaDOAN,
       TenDA: da.TenDA,
+      MoTa: da.MoTa || '',
       TrangThai: da.TrangThai,
       NgayBD: da.NgayBD,
       NgayKT: da.NgayKT,
@@ -33,6 +34,7 @@ const getThongKeDuAn = async ({ nam } = {}) => {
       ChenhLech: chiPhiDuKien - chiPhiThucTe,
       TienDo: da.TienDo,
       SoNhanVien: da.nhanViens?.length || 0,
+      nhanViens: da.nhanViens?.map((nv) => ({ MaNV1: nv.MaNV1, TenNV: nv.TenNV, VaiTro: nv.PhanCong?.VaiTro || '' })) || [],
     };
   });
 

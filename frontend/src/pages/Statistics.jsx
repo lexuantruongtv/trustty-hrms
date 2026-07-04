@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import PageHeader from '../components/common/PageHeader';
 import EmptyState from '../components/common/EmptyState';
 import { formatCurrency } from '../utils/format';
@@ -32,6 +33,7 @@ const SummaryCard = ({ label, value, color = '#6366f1' }) => (
 const TabDuAn = () => {
   const [data, setData] = useState(null);
   const [nam, setNam] = useState('');
+  const [detailDuAn, setDetailDuAn] = useState(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -100,13 +102,12 @@ const TabDuAn = () => {
                 <TableHead>
                   <TableRow sx={{ '& th': { fontWeight: 700, bgcolor: 'action.hover' } }}>
                     <TableCell>Dự án</TableCell>
-                    <TableCell>Trạng thái</TableCell>
                     <TableCell align="right">Doanh thu</TableCell>
                     <TableCell align="right">Chi phí TT</TableCell>
                     <TableCell align="right">Lợi nhuận</TableCell>
                     <TableCell align="right">Tiết kiệm CP</TableCell>
-                    <TableCell align="center">Tiến độ</TableCell>
-                    <TableCell align="center">NV</TableCell>
+                    <TableCell align="center">Nhân lực</TableCell>
+                    <TableCell align="center">Thao tác</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -115,7 +116,6 @@ const TabDuAn = () => {
                     : data.items.map((da) => (
                       <TableRow key={da.MaDOAN} hover>
                         <TableCell sx={{ fontWeight: 600 }}>{da.TenDA}</TableCell>
-                        <TableCell><Chip label={da.TrangThai} color={trangThaiColor(da.TrangThai)} size="small" /></TableCell>
                         <TableCell align="right" sx={{ color: '#6366f1', fontWeight: 600 }}>{formatCurrency(da.DoanhThu)}</TableCell>
                         <TableCell align="right">{formatCurrency(da.ChiPhiThucTe)}</TableCell>
                         <TableCell align="right" sx={{ color: da.LoiNhuan >= 0 ? 'success.main' : 'error.main', fontWeight: 600 }}>
@@ -124,8 +124,14 @@ const TabDuAn = () => {
                         <TableCell align="right" sx={{ color: da.ChenhLech >= 0 ? 'info.main' : 'error.main' }}>
                           {da.ChenhLech >= 0 ? '+' : ''}{formatCurrency(da.ChenhLech)}
                         </TableCell>
-                        <TableCell align="center">{da.TienDo}%</TableCell>
                         <TableCell align="center">{da.SoNhanVien}</TableCell>
+                        <TableCell align="center">
+                          <Tooltip title="Xem chi tiết">
+                            <IconButton size="small" color="primary" onClick={() => setDetailDuAn(da)}>
+                              <VisibilityIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
                       </TableRow>
                     ))}
                 </TableBody>
@@ -134,6 +140,64 @@ const TabDuAn = () => {
           </Card>
         </>
       )}
+
+      {/* Dialog chi tiết dự án */}
+      <Dialog open={!!detailDuAn} onClose={() => setDetailDuAn(null)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Typography fontWeight={700}>Chi tiết dự án</Typography>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 1 }}>
+          {detailDuAn && (
+            <Stack spacing={1.5}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                <Typography variant="h6" fontWeight={700}>{detailDuAn.TenDA}</Typography>
+                <Chip label={detailDuAn.TrangThai} color={trangThaiColor(detailDuAn.TrangThai)} size="small" />
+              </Box>
+              {detailDuAn.MoTa && (
+                <Typography variant="body2" color="text.secondary" fontStyle="italic">{detailDuAn.MoTa}</Typography>
+              )}
+              <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 1.5 }}>
+                {[
+                  ['Mã dự án',      detailDuAn.MaDOAN],
+                  ['Ngày bắt đầu',  detailDuAn.NgayBD],
+                  ['Ngày kết thúc', detailDuAn.NgayKT],
+                ].map(([label, val]) => (
+                  <Box key={label} sx={{ display: 'flex', py: 0.75, borderBottom: '1px solid', borderColor: 'divider', '&:last-child': { border: 'none' } }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ minWidth: 140 }}>{label}:</Typography>
+                    <Typography variant="body2" fontWeight={600}>{val}</Typography>
+                  </Box>
+                ))}
+              </Box>
+
+              <Typography variant="subtitle2" fontWeight={700}>
+                Nhân viên tham gia ({detailDuAn.nhanViens?.length || 0})
+              </Typography>
+              {detailDuAn.nhanViens?.length > 0 ? (
+                <Stack spacing={0.5}>
+                  {detailDuAn.nhanViens.map((nv, i) => (
+                    <Box key={nv.MaNV1} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 1.5, py: 0.9, bgcolor: i % 2 === 0 ? 'action.hover' : 'transparent', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{ width: 28, height: 28, borderRadius: '50%', bgcolor: 'primary.main', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Typography variant="caption" sx={{ color: '#fff', fontWeight: 700, fontSize: 10 }}>
+                            {nv.TenNV?.split(' ').map(w => w[0]).slice(-2).join('')}
+                          </Typography>
+                        </Box>
+                        <Typography variant="body2" fontWeight={600}>{nv.TenNV}</Typography>
+                      </Box>
+                      <Chip label={nv.VaiTro || '—'} size="small" variant="outlined" />
+                    </Box>
+                  ))}
+                </Stack>
+              ) : (
+                <Typography variant="body2" color="text.secondary" fontStyle="italic">Chưa có nhân viên tham gia</Typography>
+              )}
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setDetailDuAn(null)} variant="outlined">Đóng</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

@@ -66,7 +66,7 @@ const buildDocHTML = (bd, docType) => {
     const soQD = `${String(bd.MaBD).padStart(3, '0')}/QĐ-KT`;
     return `<!DOCTYPE html><html><head><meta charset="UTF-8">${style}</head><body>
       <div class="header-row">
-        <div><div class="bold">CÔNG TY PHẦN MỀM TRUSTTY</div><div>Số: ${soQD}</div></div>
+        <div class="center"><div class="bold">CÔNG TY PHẦN MỀM TRUSTTY</div><div>Số: ${soQD}</div></div>
         <div class="center"><div class="bold">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div><div>Độc lập – Tự do – Hạnh phúc</div><hr><div style="font-style:italic">Hà Nội, ${ngay}</div></div>
       </div>
       <div class="center">
@@ -97,7 +97,7 @@ const buildDocHTML = (bd, docType) => {
   const soBB = `${String(bd.MaBD).padStart(3, '0')}/BB-XL`;
   return `<!DOCTYPE html><html><head><meta charset="UTF-8">${style}</head><body>
     <div class="header-row">
-      <div><div class="bold">CÔNG TY PHẦN MỀM TRUSTTY</div><div>Số: ${soBB}</div></div>
+      <div class="center"><div class="bold">CÔNG TY PHẦN MỀM TRUSTTY</div><div>Số: ${soBB}</div></div>
       <div class="center"><div class="bold">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div><div>Độc lập – Tự do – Hạnh phúc</div><hr><div style="font-style:italic">Hà Nội, ${ngay}</div></div>
     </div>
     <div class="center">
@@ -180,7 +180,7 @@ const SalaryChangeForm = ({ open, onClose, onSave, employees }) => {
 };
 
 // ─── Dialog xem chi tiết ──────────────────────────────────────────────────
-const DetailDialog = ({ open, onClose, bd }) => {
+const DetailDialog = ({ open, onClose, bd, canPrint }) => {
   if (!bd) return null;
   const docType = getDocType(bd.HinhThuc);
   const isPositive = +bd.GiaTien >= 0;
@@ -234,7 +234,7 @@ const DetailDialog = ({ open, onClose, bd }) => {
                 : value}
             </Box>
           ))}
-          {docType && (
+          {canPrint && docType && (
             <Box sx={{ mt: 1, p: 1.5, borderRadius: 1, bgcolor: docType === 'khen_thuong' ? '#f0fdf4' : '#fef2f2', border: '1px solid', borderColor: docType === 'khen_thuong' ? '#bbf7d0' : '#fecaca' }}>
               <Typography variant="caption" color={docType === 'khen_thuong' ? 'success.main' : 'error.main'} fontWeight={600}>
                 {docType === 'khen_thuong'
@@ -247,7 +247,7 @@ const DetailDialog = ({ open, onClose, bd }) => {
       </DialogContent>
       <DialogActions sx={{ p: 2 }}>
         <Button onClick={onClose} variant="outlined">Đóng</Button>
-        {docType && (
+        {canPrint && docType && (
           <Button variant="contained" startIcon={<PrintIcon />} onClick={handlePrint}
             color={docType === 'khen_thuong' ? 'success' : 'error'}>
             {docType === 'khen_thuong' ? 'In Quyết định' : 'In Biên bản'}
@@ -270,6 +270,7 @@ const SalaryChanges = () => {
   const [employees, setEmployees] = useState([]);
 
   const canManage = user?.PhanQuyen === 'Admin';
+  const canPrint  = user?.PhanQuyen === 'Admin';
   const canViewAll = ['Admin', 'Ketoan'].includes(user?.PhanQuyen);
 
   const fetchData = useCallback(async () => {
@@ -373,7 +374,7 @@ const SalaryChanges = () => {
                           <VisibilityIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                      {getDocType(bd.HinhThuc) && (
+                      {canPrint && getDocType(bd.HinhThuc) && (
                         <Tooltip title={getDocType(bd.HinhThuc) === 'khen_thuong' ? 'In Quyết định khen thưởng' : 'In Biên bản xử lý'}>
                           <IconButton size="small"
                             color={getDocType(bd.HinhThuc) === 'khen_thuong' ? 'success' : 'error'}
@@ -409,7 +410,7 @@ const SalaryChanges = () => {
       <SalaryChangeForm open={dialogOpen} onClose={() => setDialogOpen(false)}
         onSave={handleSave} employees={employees} />
 
-      <DetailDialog open={!!detailRow} onClose={() => setDetailRow(null)} bd={detailRow} />
+      <DetailDialog open={!!detailRow} onClose={() => setDetailRow(null)} bd={detailRow} canPrint={canPrint} />
     </Box>
   );
 };

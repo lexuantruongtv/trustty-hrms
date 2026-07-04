@@ -78,58 +78,52 @@ const printHTML = (rows, thang, nam, bulk = false) => {
 
     return `
       <div class="slip">
-        <div class="header">
-          <div class="company-sub">CÔNG TY CỔ PHẦN TRUSTTY &nbsp;|&nbsp; trustty.com &nbsp;|&nbsp; hr@trustty.com</div>
-          <div class="title">PHIẾU LƯƠNG NHÂN VIÊN</div>
-          <div class="period">Kỳ lương: Tháng ${bl.Thang} / Năm ${bl.Nam}</div>
+        <div class="header-row">
+          <div class="header-left">
+            <div class="company-name">Công ty Phần mềm TrustTY</div>
+            <div class="so-phieu">Số: ${bl.MaNV1}/${bl.Nam}/${String(bl.Thang).padStart(2,'0')}/PL</div>
+          </div>
+          <div class="header-right">
+            <div class="quoc-hieu">Cộng hòa xã hội chủ nghĩa Việt Nam</div>
+            <div class="doc-lap">Độc lập – Tự do – Hạnh phúc</div>
+            <hr class="header-rule">
+          </div>
         </div>
 
-        <div class="date-line">${today}</div>
+        <div class="doc-title">Phiếu lương nhân viên</div>
+        <div class="doc-subtitle">Tháng ${bl.Thang} năm ${bl.Nam}</div>
+        <div class="date-line">Hà Nội, ${today}</div>
 
-        <div class="section-title">I. Thông tin nhân viên</div>
-        <div class="info-grid">
-          <div class="info-row"><span class="info-label">Họ và tên:</span><span class="info-val">${bl.nhanVien?.TenNV || '—'}</span></div>
-          <div class="info-row"><span class="info-label">Mã nhân viên:</span><span class="info-val">${bl.MaNV1}</span></div>
-          <div class="info-row"><span class="info-label">Chức vụ:</span><span class="info-val">${bl.nhanVien?.chucVu?.TenCV || '—'}</span></div>
-          <div class="info-row"><span class="info-label">Phòng ban:</span><span class="info-val">${bl.nhanVien?.phongBan?.TenPB || '—'}</span></div>
-          <div class="info-row"><span class="info-label">Số tài khoản:</span><span class="info-val">${bl.nhanVien?.SoTaiKhoanNN || '—'}</span></div>
-        </div>
+        <div class="section-title">I. THÔNG TIN NHÂN VIÊN</div>
+        <table class="info-table">
+          <tr><td class="info-label">Họ và tên:</td><td class="info-val">${bl.nhanVien?.TenNV || '—'}</td><td class="info-label">Mã nhân viên:</td><td class="info-val">${bl.MaNV1}</td></tr>
+          <tr><td class="info-label">Chức vụ:</td><td class="info-val">${bl.nhanVien?.chucVu?.TenCV || '—'}</td><td class="info-label">Phòng ban:</td><td class="info-val">${bl.nhanVien?.phongBan?.TenPB || '—'}</td></tr>
+          <tr><td class="info-label">Số tài khoản:</td><td class="info-val" colspan="3">${bl.nhanVien?.SoTaiKhoanNN || '—'}</td></tr>
+        </table>
 
-        <div class="section-title">II. Chi tiết lương</div>
+        <div class="section-title">II. CHI TIẾT LƯƠNG</div>
         <table class="detail-table">
           <thead>
-            <tr><th>#</th><th>Khoản mục</th><th>Số tiền (VNĐ)</th></tr>
+            <tr><th class="stt">STT</th><th>KHOẢN MỤC</th><th style="width:160px;text-align:right">SỐ TIỀN (VNĐ)</th></tr>
           </thead>
           <tbody>
-            <tr class="group-header income-header"><td colspan="3">THU NHẬP</td></tr>
-            ${incomeRows.map(([s, l, v]) => `
-              <tr>
-                <td class="stt">${s}</td>
-                <td>${l}</td>
-                <td class="amount">${v}</td>
-              </tr>`).join('')}
-            <tr class="group-header deduct-header"><td colspan="3">KHẤU TRỪ</td></tr>
-            ${deductRows.map(([s, l, v]) => `
-              <tr>
-                <td class="stt">${s}</td>
-                <td>${l}</td>
-                <td class="amount deduct">${v}</td>
-              </tr>`).join('')}
+            <tr class="group-header"><td colspan="3">A. THU THẬP</td></tr>
+            ${incomeRows.map(([s, l, v]) => `<tr><td class="stt">${s}</td><td>${l}</td><td class="amount">${v}</td></tr>`).join('')}
+            <tr class="group-header"><td colspan="3">B. CÁC KHOẢN KHẤU TRỪ</td></tr>
+            ${deductRows.map(([s, l, v]) => `<tr><td class="stt">${s}</td><td>${l}</td><td class="amount">${v}</td></tr>`).join('')}
           </tbody>
         </table>
 
         <div class="total-box">
-          <span>TỔNG THỰC LĨNH</span>
+          <span class="total-label">Tổng thực lĩnh</span>
           <span class="total-val">${fmtVND(thucLinh)}</span>
         </div>
 
         <div class="sign-row">
           <div class="sign-col"><div class="sign-name">Người nhận lương</div><div class="sign-hint">(Ký, ghi rõ họ tên)</div><div class="sign-line"></div></div>
           <div class="sign-col"><div class="sign-name">Kế toán</div><div class="sign-hint">(Ký, ghi rõ họ tên)</div><div class="sign-line"></div></div>
-          <div class="sign-col"><div class="sign-name">Giám đốc</div><div class="sign-hint">(Ký, ghi rõ họ tên)</div><div class="sign-line"></div></div>
+          <div class="sign-col"><div class="sign-name">Giám đốc</div><div class="sign-hint">(Ký, đóng dấu)</div><div class="sign-line"></div></div>
         </div>
-
-        <div class="footer">Phiếu lương được tạo từ hệ thống TrustTY HRMS</div>
       </div>`;
   };
 
@@ -156,11 +150,18 @@ const printHTML = (rows, thang, nam, bulk = false) => {
 
     return `
       <div class="slip bulk">
-        <div class="header">
-          <div class="company-sub">CÔNG TY CỔ PHẦN TRUSTTY</div>
-          <div class="title">BẢNG TỔNG HỢP LƯƠNG THÁNG ${thang}/${nam}</div>
-          <div class="period">${today}</div>
+        <div class="header-row">
+          <div class="header-left">
+            <div class="company-name">Công ty Phần mềm TrustTY</div>
+          </div>
+          <div class="header-right">
+            <div class="quoc-hieu">Cộng hòa xã hội chủ nghĩa Việt Nam</div>
+            <div class="doc-lap">Độc lập – Tự do – Hạnh phúc</div>
+            <hr class="header-rule">
+          </div>
         </div>
+        <div class="doc-title">Bảng tổng hợp lương tháng ${thang}/${nam}</div>
+        <div class="date-line">Hà Nội, ${today}</div>
 
         <table class="detail-table bulk-table">
           <thead>
@@ -172,76 +173,78 @@ const printHTML = (rows, thang, nam, bulk = false) => {
         <div class="sign-row" style="margin-top:40px">
           <div class="sign-col"><div class="sign-name">Người lập phiếu</div><div class="sign-hint">(Ký, ghi rõ họ tên)</div><div class="sign-line"></div></div>
           <div class="sign-col"><div class="sign-name">Kế toán trưởng</div><div class="sign-hint">(Ký, ghi rõ họ tên)</div><div class="sign-line"></div></div>
-          <div class="sign-col"><div class="sign-name">Giám đốc</div><div class="sign-hint">(Ký, ghi rõ họ tên)</div><div class="sign-line"></div></div>
+          <div class="sign-col"><div class="sign-name">Giám đốc</div><div class="sign-hint">(Ký, đóng dấu)</div><div class="sign-line"></div></div>
         </div>
       </div>`;
   };
 
   const css = `
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #1a1a2e; background: #fff; }
-    .slip { max-width: 760px; margin: 0 auto; padding: 32px 36px; }
+    body { font-family: 'Times New Roman', Times, serif; font-size: 13pt; color: #000; background: #fff; }
+    .slip { max-width: 760px; margin: 0 auto; padding: 28px 40px; }
     .slip.bulk { max-width: 1050px; }
 
-    /* Header */
-    .header { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; border-radius: 10px; padding: 20px 24px; text-align: center; margin-bottom: 16px; }
-    .company-sub { font-size: 11px; opacity: 0.85; margin-bottom: 6px; }
-    .title { font-size: 20px; font-weight: 800; letter-spacing: 1px; margin-bottom: 4px; }
-    .period { font-size: 13px; opacity: 0.9; }
+    /* Quốc hiệu - Tiêu ngữ */
+    .header { text-align: center; margin-bottom: 6px; }
+    .company-name { font-weight: bold; font-size: 13pt; text-transform: uppercase; }
+    .quoc-hieu { font-weight: bold; font-size: 13pt; text-transform: uppercase; }
+    .doc-lap { font-size: 13pt; }
+    .header-rule { border: none; border-top: 1px solid #000; width: 220px; margin: 3px auto 0; }
+    .header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+    .header-left { text-align: center; }
+    .header-right { text-align: center; }
+    .so-phieu { font-size: 12pt; margin-top: 4px; }
 
-    /* Date */
-    .date-line { text-align: right; font-size: 11px; color: #888; margin-bottom: 14px; }
+    /* Tiêu đề văn bản */
+    .doc-title { text-align: center; font-size: 15pt; font-weight: bold; text-transform: uppercase; margin: 14px 0 4px; }
+    .doc-subtitle { text-align: center; font-size: 13pt; font-style: italic; margin-bottom: 16px; }
+    .date-line { text-align: right; font-size: 12pt; font-style: italic; margin-bottom: 14px; }
 
     /* Section titles */
-    .section-title { font-size: 12px; font-weight: 700; color: #6366f1; text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 8px; border-bottom: 2px solid #e0e7ff; padding-bottom: 4px; }
+    .section-title { font-size: 13pt; font-weight: bold; margin: 14px 0 6px; }
 
     /* Info grid */
-    .info-grid { background: #f8f9fc; border-radius: 8px; padding: 14px 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; margin-bottom: 4px; }
-    .info-row { display: flex; gap: 8px; }
-    .info-label { min-width: 110px; color: #666; font-size: 12px; }
-    .info-val { font-weight: 600; font-size: 13px; }
+    .info-table { width: 100%; margin-bottom: 8px; font-size: 13pt; }
+    .info-table td { padding: 3px 6px; vertical-align: top; }
+    .info-label { font-weight: normal; width: 160px; white-space: nowrap; }
+    .info-val { font-weight: bold; }
 
     /* Detail table */
-    .detail-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 13px; }
-    .detail-table th { background: #6366f1; color: #fff; padding: 8px 10px; text-align: left; font-weight: 700; }
-    .detail-table th:last-child { text-align: right; }
-    .detail-table td { padding: 7px 10px; border-bottom: 1px solid #f0f0f0; }
-    .detail-table tr:last-child td { border-bottom: none; }
+    .detail-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 12pt; }
+    .detail-table th { border: 1px solid #000; padding: 6px 8px; text-align: center; font-weight: bold; background: #f0f0f0; }
+    .detail-table td { border: 1px solid #000; padding: 5px 8px; }
     .detail-table tr:nth-child(even) td { background: #fafafa; }
-    .group-header td { font-weight: 700; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.5px; padding: 6px 10px; }
-    .income-header td { background: #dcfce7; color: #166534; }
-    .deduct-header td { background: #fee2e2; color: #991b1b; }
-    .stt { width: 32px; text-align: center; color: #aaa; font-size: 12px; }
-    .amount { text-align: right; font-weight: 600; white-space: nowrap; }
-    .deduct { color: #dc2626; }
-    .income { color: #16a34a; }
+    .group-header td { font-weight: bold; text-transform: uppercase; font-size: 11pt; background: #e8e8e8 !important; text-align: center; }
+    .stt { width: 32px; text-align: center; }
+    .amount { text-align: right; white-space: nowrap; }
+    .deduct { }
+    .income { }
 
     /* Total box */
-    .total-box { background: linear-gradient(90deg, #ede9fe, #ddd6fe); border-radius: 8px; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
-    .total-box span:first-child { font-size: 15px; font-weight: 700; color: #4338ca; }
-    .total-val { font-size: 18px; font-weight: 800; color: #6366f1; }
+    .total-box { border: 2px solid #000; padding: 8px 16px; display: flex; justify-content: space-between; align-items: center; margin: 12px 0 24px; }
+    .total-label { font-size: 14pt; font-weight: bold; text-transform: uppercase; }
+    .total-val { font-size: 14pt; font-weight: bold; }
+
+    /* Total words */
+    .total-words { font-style: italic; font-size: 12pt; margin-bottom: 24px; }
 
     /* Signature */
-    .sign-row { display: flex; justify-content: space-around; margin-top: 8px; }
-    .sign-col { text-align: center; min-width: 130px; }
-    .sign-name { font-weight: 700; font-size: 13px; }
-    .sign-hint { font-size: 11px; color: #888; margin-top: 2px; }
-    .sign-line { border-top: 1px solid #bbb; margin-top: 52px; width: 120px; margin-left: auto; margin-right: auto; }
-
-    /* Footer */
-    .footer { text-align: center; font-size: 10px; color: #bbb; margin-top: 24px; }
+    .sign-row { display: flex; justify-content: space-around; margin-top: 16px; }
+    .sign-col { text-align: center; min-width: 160px; }
+    .sign-name { font-weight: bold; font-size: 13pt; }
+    .sign-hint { font-size: 12pt; font-style: italic; margin-top: 2px; }
+    .sign-line { border-top: 1px solid #000; margin-top: 60px; width: 140px; margin-left: auto; margin-right: auto; }
 
     /* Bulk table */
-    .bulk-table th, .bulk-table td { font-size: 12px; padding: 6px 8px; }
-    .bulk-table .amount { white-space: nowrap; }
+    .bulk-table th, .bulk-table td { font-size: 11pt; padding: 5px 6px; }
 
-    /* Page break between slips */
+    /* Page break */
     .page-break { page-break-after: always; }
 
     @media print {
       body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .slip { padding: 20px 24px; }
-      @page { margin: 12mm; ${bulk ? 'size: A4 landscape;' : 'size: A4 portrait;'} }
+      .slip { padding: 16px 24px; }
+      @page { margin: 15mm; ${bulk ? 'size: A4 landscape;' : 'size: A4 portrait;'} }
     }
   `;
 
@@ -355,24 +358,33 @@ const PayslipPreview = ({ rows, thang, nam, bulk }) => {
             pb: idx < rows.length - 1 ? 5 : 0,
             borderBottom: idx < rows.length - 1 ? '2px dashed #e0e0e0' : 'none',
           }}>
-            {/* Header */}
-            <Box sx={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', borderRadius: 2, p: 2.5, mb: 2, color: '#fff', textAlign: 'center' }}>
-              <Typography variant="caption" sx={{ opacity: 0.85, display: 'block' }}>
-                CÔNG TY CỔ PHẦN TRUSTTY &nbsp;|&nbsp; trustty.com &nbsp;|&nbsp; hr@trustty.com
-              </Typography>
-              <Typography variant="h6" fontWeight={800} sx={{ mt: 0.5, letterSpacing: 1 }}>PHIẾU LƯƠNG NHÂN VIÊN</Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.25 }}>Kỳ lương: Tháng {bl.Thang} / Năm {bl.Nam}</Typography>
+            {/* Quốc hiệu - Tiêu ngữ */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="body2" fontWeight={700} sx={{ textTransform: 'uppercase' }}>Công ty Cổ phần TrustTY</Typography>
+                <Typography variant="caption" color="text.secondary">Số: {bl.MaNV1}/{bl.Nam}/{String(bl.Thang).padStart(2,'0')}/PL</Typography>
+              </Box>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="body2" fontWeight={700} sx={{ textTransform: 'uppercase' }}>Cộng hòa xã hội chủ nghĩa Việt Nam</Typography>
+                <Typography variant="body2">Độc lập – Tự do – Hạnh phúc</Typography>
+                <Box sx={{ borderBottom: '1px solid #000', width: 200, mx: 'auto', mt: 0.25 }} />
+              </Box>
             </Box>
 
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'right', mb: 1.5 }}>
-              {todayStr()}
+            {/* Tiêu đề */}
+            <Box sx={{ textAlign: 'center', my: 2 }}>
+              <Typography variant="h6" fontWeight={700} sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>Phiếu lương nhân viên</Typography>
+              <Typography variant="body2" fontStyle="italic">Tháng {bl.Thang} năm {bl.Nam}</Typography>
+            </Box>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'right', mb: 1.5, fontStyle: 'italic' }}>
+              Hà Nội, {todayStr()}
             </Typography>
 
+            <Divider sx={{ mb: 2 }} />
+
             {/* I. Thông tin NV */}
-            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1, color: 'primary.main', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              I. Thông tin nhân viên
-            </Typography>
-            <Box sx={{ bgcolor: 'grey.50', borderRadius: 1.5, p: 2, mb: 2, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>I. Thông tin nhân viên</Typography>
+            <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 1.5, mb: 2, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0.75 }}>
               {[
                 ['Họ và tên', bl.nhanVien?.TenNV],
                 ['Mã nhân viên', bl.MaNV1],
@@ -380,73 +392,67 @@ const PayslipPreview = ({ rows, thang, nam, bulk }) => {
                 ['Phòng ban', bl.nhanVien?.phongBan?.TenPB || '—'],
                 ['Số tài khoản', bl.nhanVien?.SoTaiKhoanNN || '—'],
               ].map(([label, val]) => (
-                <Box key={label} sx={{ display: 'flex', gap: 1, alignItems: 'baseline' }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ minWidth: 100, flexShrink: 0 }}>{label}:</Typography>
+                <Box key={label} sx={{ display: 'flex', gap: 1 }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ minWidth: 100, flexShrink: 0 }}>{label}:</Typography>
                   <Typography variant="body2" fontWeight={600}>{val}</Typography>
                 </Box>
               ))}
             </Box>
 
             {/* II. Chi tiết lương */}
-            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1, color: 'primary.main', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              II. Chi tiết lương
-            </Typography>
-            <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1.5, overflow: 'hidden', mb: 2 }}>
-              <Box sx={{ display: 'grid', gridTemplateColumns: '28px 1fr auto', px: 2, py: 1, bgcolor: 'primary.main' }}>
-                <Typography variant="caption" sx={{ color: '#fff', fontWeight: 700 }}>#</Typography>
-                <Typography variant="caption" sx={{ color: '#fff', fontWeight: 700 }}>Khoản mục</Typography>
-                <Typography variant="caption" sx={{ color: '#fff', fontWeight: 700, textAlign: 'right' }}>Số tiền</Typography>
-              </Box>
-
-              {/* Thu nhập */}
-              <Box sx={{ px: 2, py: 0.75, bgcolor: '#dcfce7', borderTop: '1px solid', borderColor: 'divider' }}>
-                <Typography variant="caption" fontWeight={700} sx={{ color: '#166534', textTransform: 'uppercase', letterSpacing: 0.5 }}>Thu nhập</Typography>
-              </Box>
-              {incomeRows.map((row, i) => (
-                <Box key={row.stt} sx={{ display: 'grid', gridTemplateColumns: '28px 1fr auto', alignItems: 'center', px: 2, py: 1.1, bgcolor: i % 2 === 0 ? 'transparent' : 'grey.50', borderTop: '1px solid', borderColor: 'divider' }}>
-                  <Typography variant="caption" color="text.disabled" fontWeight={600}>{row.stt}.</Typography>
-                  <Typography variant="body2" fontWeight={500}>{row.label}</Typography>
-                  <Typography variant="body2" fontWeight={700} color={row.color} sx={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                    {row.sign}{formatCurrency(row.val)}
-                  </Typography>
-                </Box>
-              ))}
-
-              {/* Khấu trừ */}
-              <Box sx={{ px: 2, py: 0.75, bgcolor: '#fee2e2', borderTop: '1px solid', borderColor: 'divider' }}>
-                <Typography variant="caption" fontWeight={700} sx={{ color: '#991b1b', textTransform: 'uppercase', letterSpacing: 0.5 }}>Khấu trừ</Typography>
-              </Box>
-              {deductRows.map((row, i) => (
-                <Box key={row.label} sx={{ display: 'grid', gridTemplateColumns: '28px 1fr auto', alignItems: 'center', px: 2, py: 1.1, bgcolor: i % 2 === 0 ? 'transparent' : 'grey.50', borderTop: '1px solid', borderColor: 'divider' }}>
-                  <Typography variant="caption" color="text.disabled" fontWeight={600}>{stt++}.</Typography>
-                  <Typography variant="body2" fontWeight={500}>{row.label}</Typography>
-                  <Typography variant="body2" fontWeight={700} color="error.main" sx={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                    −{formatCurrency(row.val)}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
+            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>II. Chi tiết lương</Typography>
+            <TableContainer sx={{ mb: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ bgcolor: 'grey.100' }}>
+                    <TableCell sx={{ fontWeight: 700, width: 36 }}>STT</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Khoản mục</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700 }}>Số tiền (VNĐ)</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  <TableRow sx={{ bgcolor: '#f0f4ff' }}>
+                    <TableCell colSpan={3} sx={{ fontWeight: 700, fontSize: 12, py: 0.75 }}>A. Thu nhập</TableCell>
+                  </TableRow>
+                  {incomeRows.map((row) => (
+                    <TableRow key={row.stt}>
+                      <TableCell align="center" sx={{ color: 'text.disabled', fontSize: 12 }}>{row.stt}</TableCell>
+                      <TableCell>{row.label}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 600, color: row.sign === '+' ? 'success.main' : 'text.primary' }}>
+                        {row.sign}{formatCurrency(row.val)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  <TableRow sx={{ bgcolor: '#fff5f5' }}>
+                    <TableCell colSpan={3} sx={{ fontWeight: 700, fontSize: 12, py: 0.75 }}>B. Các khoản khấu trừ</TableCell>
+                  </TableRow>
+                  {deductRows.map((row, i) => (
+                    <TableRow key={row.label}>
+                      <TableCell align="center" sx={{ color: 'text.disabled', fontSize: 12 }}>{incomeRows.length + i + 1}</TableCell>
+                      <TableCell>{row.label}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 600, color: 'error.main' }}>−{formatCurrency(row.val)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
 
             {/* Tổng thực lĩnh */}
-            <Box sx={{ background: 'linear-gradient(90deg,#ede9fe,#ddd6fe)', borderRadius: 2, px: 2.5, py: 1.75, display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <Typography variant="subtitle1" fontWeight={700} color="primary.dark">TỔNG THỰC LĨNH</Typography>
-              <Typography variant="h6" fontWeight={800} color="primary.main">{formatCurrency(thucLinh)}</Typography>
+            <Box sx={{ border: '2px solid', borderColor: 'text.primary', px: 2, py: 1.25, display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="subtitle1" fontWeight={700} sx={{ textTransform: 'uppercase' }}>Tổng thực lĩnh</Typography>
+              <Typography variant="h6" fontWeight={800}>{formatCurrency(thucLinh)}</Typography>
             </Box>
 
             {/* Ký tên */}
-            <Stack direction="row" justifyContent="space-around" sx={{ mt: 1 }}>
-              {['Người nhận lương', 'Kế toán', 'Giám đốc'].map((role) => (
-                <Box key={role} sx={{ textAlign: 'center', minWidth: 110 }}>
+            <Stack direction="row" justifyContent="space-around">
+              {[['Người nhận lương', '(Ký, ghi rõ họ tên)'], ['Kế toán', '(Ký, ghi rõ họ tên)'], ['Giám đốc', '(Ký, đóng dấu)']].map(([role, hint]) => (
+                <Box key={role} sx={{ textAlign: 'center', minWidth: 120 }}>
                   <Typography variant="body2" fontWeight={700}>{role}</Typography>
-                  <Typography variant="caption" color="text.secondary">(Ký, ghi rõ họ tên)</Typography>
-                  <Box sx={{ borderBottom: '1px solid #bbb', mt: 5, width: 110, mx: 'auto' }} />
+                  <Typography variant="caption" color="text.secondary" fontStyle="italic">{hint}</Typography>
+                  <Box sx={{ borderBottom: '1px solid #999', mt: 6, width: 120, mx: 'auto' }} />
                 </Box>
               ))}
             </Stack>
-
-            <Typography variant="caption" color="text.disabled" sx={{ display: 'block', textAlign: 'center', mt: 3 }}>
-              Phiếu lương được tạo từ hệ thống TrustTY HRMS
-            </Typography>
           </Box>
         );
       })}
@@ -517,19 +523,17 @@ const ExportDialog = ({ open, onClose, employees, filterThang, filterNam }) => {
   const [maNV, setMaNV] = useState('');
   const [thang, setThang] = useState('');
   const [nam, setNam] = useState(currentYear);
-  const [step, setStep] = useState('form');
-  const [previewRows, setPreviewRows] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (open) {
-      setMode('single'); setMaNV(''); setStep('form'); setPreviewRows([]);
+      setMode('single'); setMaNV('');
       setThang(filterThang || new Date().getMonth() + 1);
       setNam(filterNam || currentYear);
     }
   }, [open, filterThang, filterNam]);
 
-  const handlePreview = async () => {
+  const handlePrint = async () => {
     if (!thang || !nam) { toast.error('Vui lòng chọn tháng và năm'); return; }
     if (mode === 'single' && !maNV) { toast.error('Vui lòng chọn nhân viên'); return; }
     setLoading(true);
@@ -539,95 +543,72 @@ const ExportDialog = ({ open, onClose, employees, filterThang, filterNam }) => {
       const res = await getPayroll(params);
       const rows = res.data.data?.items || [];
       if (rows.length === 0) { toast.error('Không có dữ liệu bảng lương cho kỳ này'); return; }
-      setPreviewRows(rows);
-      setStep('preview');
+      printHTML(rows, thang, nam, mode === 'all');
+      onClose();
     } catch { toast.error('Lỗi khi tải dữ liệu'); }
     finally { setLoading(false); }
   };
 
-  const handlePrint = () => {
-    printHTML(previewRows, thang, nam, mode === 'all');
-    onClose();
-  };
-
   return (
-    <Dialog open={open} onClose={onClose} maxWidth={step === 'preview' ? 'md' : 'sm'} fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <PictureAsPdfIcon color="error" />
-          <Typography fontWeight={700}>{step === 'form' ? 'Xuất phiếu lương' : 'Xem trước phiếu lương'}</Typography>
+          <PrintIcon color="primary" />
+          <Typography fontWeight={700}>In phiếu lương</Typography>
         </Box>
         <IconButton size="small" onClick={onClose}><CloseIcon fontSize="small" /></IconButton>
       </DialogTitle>
       <Divider />
       <DialogContent sx={{ pt: 2 }}>
-        {step === 'form' ? (
-          <Stack spacing={2.5}>
+        <Stack spacing={2.5}>
+          <FormControl fullWidth size="small">
+            <InputLabel>Chế độ in</InputLabel>
+            <Select value={mode} label="Chế độ in" onChange={(e) => setMode(e.target.value)}>
+              <MenuItem value="single">Một nhân viên</MenuItem>
+              <MenuItem value="all">Toàn bộ nhân viên</MenuItem>
+            </Select>
+          </FormControl>
+          {mode === 'single' && (
+            <SearchableEmployeeSelect
+              value={maNV}
+              onChange={(e) => setMaNV(e.target.value)}
+              employees={employees}
+              size="small"
+            />
+          )}
+          <Stack direction="row" spacing={2}>
             <FormControl fullWidth size="small">
-              <InputLabel>Chế độ xuất</InputLabel>
-              <Select value={mode} label="Chế độ xuất" onChange={(e) => setMode(e.target.value)}>
-                <MenuItem value="single">Một nhân viên</MenuItem>
-                <MenuItem value="all">Toàn bộ nhân viên</MenuItem>
+              <InputLabel>Tháng</InputLabel>
+              <Select value={thang} label="Tháng" onChange={(e) => setThang(e.target.value)}>
+                {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                  <MenuItem key={m} value={m}>Tháng {m}</MenuItem>
+                ))}
               </Select>
             </FormControl>
-            {mode === 'single' && (
-              <SearchableEmployeeSelect
-                value={maNV}
-                onChange={(e) => setMaNV(e.target.value)}
-                employees={employees}
-                size="small"
-              />
-            )}
-            <Stack direction="row" spacing={2}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Tháng</InputLabel>
-                <Select value={thang} label="Tháng" onChange={(e) => setThang(e.target.value)}>
-                  {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                    <MenuItem key={m} value={m}>Tháng {m}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl fullWidth size="small">
-                <InputLabel>Năm</InputLabel>
-                <Select value={nam} label="Năm" onChange={(e) => setNam(e.target.value)}>
-                  {Array.from({ length: 5 }, (_, i) => currentYear - i).map((y) => (
-                    <MenuItem key={y} value={y}>{y}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Stack>
-            <Box sx={{ bgcolor: 'grey.50', borderRadius: 1.5, p: 1.5 }}>
-              <Typography variant="caption" color="text.secondary">
-                {mode === 'single'
-                  ? '📄 Xuất phiếu lương cho nhân viên được chọn trong kỳ tháng/năm.'
-                  : '📋 Xuất bảng tổng hợp lương toàn bộ nhân viên trong kỳ tháng/năm.'}
-              </Typography>
-            </Box>
+            <FormControl fullWidth size="small">
+              <InputLabel>Năm</InputLabel>
+              <Select value={nam} label="Năm" onChange={(e) => setNam(e.target.value)}>
+                {Array.from({ length: 5 }, (_, i) => currentYear - i).map((y) => (
+                  <MenuItem key={y} value={y}>{y}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Stack>
-        ) : (
-          <Box sx={{ maxHeight: '70vh', overflowY: 'auto', pr: 0.5 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-              <Chip label={mode === 'all' ? `${previewRows.length} nhân viên` : previewRows[0]?.nhanVien?.TenNV} color="primary" size="small" variant="outlined" />
-              <Typography variant="caption" color="text.secondary">Xem trước trước khi in / xuất PDF</Typography>
-            </Box>
-            <PayslipPreview rows={previewRows} thang={thang} nam={nam} bulk={mode === 'all'} />
+          <Box sx={{ bgcolor: 'grey.50', borderRadius: 1.5, p: 1.5 }}>
+            <Typography variant="caption" color="text.secondary">
+              {mode === 'single'
+                ? '📄 In phiếu lương cho nhân viên được chọn trong kỳ tháng/năm.'
+                : '📋 In bảng tổng hợp lương toàn bộ nhân viên trong kỳ tháng/năm.'}
+            </Typography>
           </Box>
-        )}
+        </Stack>
       </DialogContent>
       <Divider />
       <DialogActions sx={{ p: 2, gap: 1 }}>
-        {step === 'preview' && <Button variant="outlined" onClick={() => setStep('form')}>← Quay lại</Button>}
-        <Box sx={{ flex: 1 }} />
         <Button onClick={onClose} variant="outlined" color="inherit">Hủy</Button>
-        {step === 'form' ? (
-          <Button variant="contained" startIcon={<VisibilityIcon />} onClick={handlePreview} disabled={loading}>
-            {loading ? 'Đang tải...' : 'Xem trước'}
-          </Button>
-        ) : (
-          <Button variant="contained" color="error" startIcon={<PrintIcon />} onClick={handlePrint}>
-            In / Xuất PDF
-          </Button>
-        )}
+        <Button variant="contained" startIcon={<PrintIcon />} onClick={handlePrint} disabled={loading}>
+          {loading ? 'Đang tải...' : 'In phiếu lương'}
+        </Button>
       </DialogActions>
     </Dialog>
   );
@@ -642,7 +623,6 @@ const Payroll = () => {
   const [page, setPage] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
-  const [previewRow, setPreviewRow] = useState(null);
   const [employees, setEmployees] = useState([]);
   const [search, setSearch] = useState('');
   const [filterThang, setFilterThang] = useState('');
@@ -716,8 +696,8 @@ const Payroll = () => {
         title="Bảng lương" subtitle={`${data.total} bản ghi`}
         action={canManage && (
           <Stack direction="row" spacing={1}>
-            <Button variant="outlined" color="error" startIcon={<PictureAsPdfIcon />} onClick={() => setExportOpen(true)}>
-              Xuất phiếu lương
+            <Button variant="outlined" startIcon={<PrintIcon />} onClick={() => setExportOpen(true)}>
+              In phiếu lương
             </Button>
             <Button variant="outlined" startIcon={<AutorenewIcon />} onClick={() => setAutoCalcOpen(true)}>
               Tính lương tự động
@@ -765,7 +745,7 @@ const Payroll = () => {
                 <TableCell align="right">Phí BH (10,5%)</TableCell>
                 <TableCell align="right" sx={{ minWidth: 110 }}>Biến động</TableCell>
                 <TableCell align="right">Thực lĩnh</TableCell>
-                <TableCell align="center" sx={{ minWidth: 100 }}>Thao tác</TableCell>
+                {canManage && <TableCell align="center" sx={{ minWidth: 100 }}>Thao tác</TableCell>}
               </TableRow>
             </TableHead>
             <TableBody>
@@ -802,22 +782,23 @@ const Payroll = () => {
                   <TableCell align="right" sx={{ fontWeight: 700, color: 'success.main' }}>
                     {formatCurrency(calcBH(bl).thucLinh)}
                   </TableCell>
-                  <TableCell align="center">
-                    <Stack direction="row" justifyContent="center" spacing={0.5}>
-                      <Tooltip title="Xem trước & in phiếu lương">
-                        <IconButton size="small" color="primary" onClick={() => setPreviewRow(bl)}>
-                          <VisibilityIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      {canManage && (
+                  {canManage && (
+                    <TableCell align="center">
+                      <Stack direction="row" justifyContent="center" spacing={0.5}>
+                        <Tooltip title="In phiếu lương">
+                          <IconButton size="small" color="primary"
+                            onClick={() => printHTML([bl], bl.Thang, bl.Nam, false)}>
+                            <PrintIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
                         <Tooltip title="Xóa">
                           <IconButton size="small" color="error" onClick={() => handleDelete(bl.MaBL)}>
                             <DeleteIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                      )}
-                    </Stack>
-                  </TableCell>
+                      </Stack>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -826,31 +807,6 @@ const Payroll = () => {
         <TablePagination component="div" count={data.total} page={page} rowsPerPage={10}
           onPageChange={(_, p) => setPage(p)} rowsPerPageOptions={[10]} labelRowsPerPage="Hàng/trang" />
       </Card>
-
-      {/* Dialog xem trước nhanh từ 1 hàng */}
-      <Dialog open={!!previewRow} onClose={() => setPreviewRow(null)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <PictureAsPdfIcon color="error" />
-            <Typography fontWeight={700}>Xem trước phiếu lương</Typography>
-          </Box>
-          <IconButton size="small" onClick={() => setPreviewRow(null)}><CloseIcon fontSize="small" /></IconButton>
-        </DialogTitle>
-        <Divider />
-        <DialogContent>
-          <Box sx={{ maxHeight: '70vh', overflowY: 'auto' }}>
-            {previewRow && <PayslipPreview rows={[previewRow]} thang={previewRow.Thang} nam={previewRow.Nam} bulk={false} />}
-          </Box>
-        </DialogContent>
-        <Divider />
-        <DialogActions sx={{ p: 2, gap: 1 }}>
-          <Button onClick={() => setPreviewRow(null)} variant="outlined" color="inherit">Đóng</Button>
-          <Button variant="contained" color="error" startIcon={<PrintIcon />}
-            onClick={() => { printHTML([previewRow], previewRow.Thang, previewRow.Nam, false); setPreviewRow(null); }}>
-            In / Xuất PDF
-          </Button>
-        </DialogActions>
-      </Dialog>
 
       <PayrollForm open={dialogOpen} onClose={() => setDialogOpen(false)} onSave={handleCalculate} employees={employees} />
       <ExportDialog open={exportOpen} onClose={() => setExportOpen(false)} employees={employees} filterThang={filterThang} filterNam={filterNam} />
