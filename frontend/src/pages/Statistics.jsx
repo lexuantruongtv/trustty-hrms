@@ -278,9 +278,6 @@ const TabChenhLech = () => {
             {YEARS.map((y) => <MenuItem key={y} value={y}>{y}</MenuItem>)}
           </Select>
         </FormControl>
-        <Button variant="outlined" size="small" startIcon={<AddIcon />} onClick={() => setFormOpen(true)}>
-          Thêm chi phí HĐ
-        </Button>
       </Stack>
 
       {data && (
@@ -378,7 +375,12 @@ const TabChenhLech = () => {
           {/* Bảng chi phí hoạt động */}
           <Card>
             <CardContent sx={{ pb: '8px !important', pt: 2, px: 2 }}>
-              <Typography fontWeight={700} mb={1.5}>Chi phí hoạt động đã nhập năm {nam}</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                <Typography fontWeight={700}>Chi phí hoạt động đã nhập năm {nam}</Typography>
+                <Button variant="outlined" size="small" startIcon={<AddIcon />} onClick={() => setFormOpen(true)}>
+                  Thêm chi phí HĐ
+                </Button>
+              </Box>
             </CardContent>
             <TableContainer>
               <Table size="small">

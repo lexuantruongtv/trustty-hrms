@@ -13,6 +13,7 @@ const useToast = () => ({
   success: (msg) => Toast.fire({ icon: 'success', title: msg }),
   error: (msg) => Toast.fire({ icon: 'error', title: msg }),
   warning: (msg) => Toast.fire({ icon: 'warning', title: msg }),
+  info: (msg) => Toast.fire({ icon: 'info', title: msg }),
   confirm: (title, text) =>
     Swal.fire({
       title,

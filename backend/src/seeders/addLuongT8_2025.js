@@ -36,13 +36,16 @@ const run = async () => {
       }
 
       const { luongCB, phuCap } = config;
-      const thueTNCN = parseFloat((luongCB * 0.1).toFixed(2));
-      const thucLinh = parseFloat((luongCB + phuCap - thueTNCN).toFixed(2));
+      const thueTNCN = parseFloat((luongCB * 0.10).toFixed(2));
+      const bhxh     = parseFloat((luongCB * 0.08).toFixed(2));
+      const bhyt     = parseFloat((luongCB * 0.015).toFixed(2));
+      const bhtn     = parseFloat((luongCB * 0.01).toFixed(2));
+      const thucLinh = parseFloat((luongCB + phuCap - thueTNCN - bhxh - bhyt - bhtn).toFixed(2));
       const MaBL = `BL${nv.MaNV1}${NAM}${String(THANG).padStart(2, '0')}`;
 
       const [, wasCreated] = await BangLuong.findOrCreate({
         where: { MaBL },
-        defaults: { MaBL, MaNV1: nv.MaNV1, Thang: THANG, Nam: NAM, LuongCB: luongCB, PhuCap: phuCap, ThueTNCN: thueTNCN, ThucLinh: thucLinh },
+        defaults: { MaBL, MaNV1: nv.MaNV1, Thang: THANG, Nam: NAM, LuongCB: luongCB, PhuCap: phuCap, ThueTNCN: thueTNCN, BHXH: bhxh, BHYT: bhyt, BHTN: bhtn, ThucLinh: thucLinh },
       });
 
       if (wasCreated) {

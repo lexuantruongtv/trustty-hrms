@@ -1,4 +1,4 @@
-const { BangLuong, NhanVien, BienDongLuong, ChucVu, PhongBan } = require('../models');
+const { BangLuong, NhanVien, BienDongLuong, ChucVu, PhongBan, DuAn, PhanCong } = require('../models');
 const { sequelize } = require('../models');
 const { Op, fn, col, literal } = require('sequelize');
 const { getPagination, getPagingData } = require('../utils/pagination');
@@ -30,17 +30,15 @@ const getAll = async (query) => {
 
   // Tính SUM biến động lương cho từng bản ghi
   const rows = await Promise.all(data.rows.map(async (bl) => {
+    const dauThang  = `${bl.Nam}-${String(bl.Thang).padStart(2, '0')}-01`;
+    const cuoiThang = `${bl.Nam}-${String(bl.Thang).padStart(2, '0')}-${String(new Date(bl.Nam, bl.Thang, 0).getDate()).padStart(2, '0')}`;
     const result = await BienDongLuong.findOne({
       where: {
         MaNV1: bl.MaNV1,
-        NgayQuyetDinh: {
-          [Op.between]: [
-            `${bl.Nam}-${String(bl.Thang).padStart(2, '0')}-01`,
-            `${bl.Nam}-${String(bl.Thang).padStart(2, '0')}-31`,
-          ],
-        },
+        NgayQuyetDinh: { [Op.between]: [dauThang, cuoiThang] },
       },
       attributes: [[fn('COALESCE', fn('SUM', col('GiaTien')), 0), 'TongBienDong']],
+      group: ['MaNV1'],
       raw: true,
     });
     return { ...bl.toJSON(), TongBienDong: parseFloat(result?.TongBienDong ?? 0) };
@@ -80,4 +78,107 @@ const remove = async (id) => {
   await bl.destroy();
 };
 
-module.exports = { getAll, tinhLuong, remove };
+/**
+ * Tự động tính lương hàng tháng:
+ * - Lấy tất cả dự án đang hoạt động trong tháng (NgayBD <= cuối tháng && NgayKT >= đầu tháng)
+ * - Gom nhân viên tham gia các dự án đó + Giám đốc (CV001)
+ * - Tạo bảng lương nếu chưa tồn tại
+ */
+const LUONG_THEO_CV = {
+  CV001: { luongCB: 50000000, phuCap: 10000000 }, // Giám Đốc
+  CV002: { luongCB: 30000000, phuCap:  5000000 }, // Trưởng Phòng
+  CV007: { luongCB: 28000000, phuCap:  4000000 }, // Quản Lý
+  CV005: { luongCB: 25000000, phuCap:  4000000 }, // Senior Developer
+  CV003: { luongCB: 18000000, phuCap:  2000000 }, // Nhân Viên
+  CV006: { luongCB: 14000000, phuCap:  1500000 }, // Junior Developer
+  CV004: { luongCB:  8000000, phuCap:   500000 }, // Thực Tập Sinh
+};
+
+const autoTinhLuongThang = async ({ thang, nam }) => {
+  const t = parseInt(thang);
+  const n = parseInt(nam);
+  if (!t || !n) throw { status: 400, message: 'Thiếu tháng hoặc năm' };
+
+  const dauThang = `${n}-${String(t).padStart(2, '0')}-01`;
+  // Tính ngày cuối tháng chính xác (tránh ngày không hợp lệ như 06-31)
+  const cuoiThangDate = new Date(n, t, 0); // ngày 0 của tháng t+1 = ngày cuối tháng t
+  const cuoiThang = `${n}-${String(t).padStart(2, '0')}-${String(cuoiThangDate.getDate()).padStart(2, '0')}`;
+
+  // 1. Dự án có timeline giao với tháng (không lọc TrangThai — tính theo thực tế thời gian chạy)
+  const duAns = await DuAn.findAll({
+    where: {
+      NgayBD: { [Op.lte]: cuoiThang },
+      NgayKT: { [Op.gte]: dauThang },
+    },
+    attributes: ['MaDOAN', 'TenDA'],
+  });
+
+  if (duAns.length === 0) {
+    return { created: 0, skipped: 0, message: `Tháng ${t}/${n} không có dự án nào đang thực hiện, bỏ qua.`, details: [] };
+  }
+
+  // 2. Nhân viên tham gia dự án + Giám đốc
+  const maDoanList = duAns.map((d) => d.MaDOAN);
+  const phanCongs = await PhanCong.findAll({
+    where: { MaDOAN: { [Op.in]: maDoanList } },
+    attributes: ['MaNV1'],
+  });
+  const maNVSet = new Set(phanCongs.map((p) => p.MaNV1));
+
+  const giamDocs = await NhanVien.findAll({
+    where: { MaCV: 'CV001', TrangThai: 'Đang làm việc' },
+    attributes: ['MaNV1'],
+  });
+  giamDocs.forEach((gd) => maNVSet.add(gd.MaNV1));
+
+  // 3. Lấy thông tin chức vụ
+  const nhanViens = await NhanVien.findAll({
+    where: { MaNV1: { [Op.in]: [...maNVSet] }, TrangThai: 'Đang làm việc' },
+    attributes: ['MaNV1', 'TenNV', 'MaCV'],
+  });
+
+  let created = 0, skipped = 0;
+  const details = [];
+
+  for (const nv of nhanViens) {
+    const config = LUONG_THEO_CV[nv.MaCV];
+    if (!config) {
+      details.push({ MaNV1: nv.MaNV1, TenNV: nv.TenNV, status: 'skip', reason: `Không có cấu hình lương cho chức vụ ${nv.MaCV}` });
+      skipped++;
+      continue;
+    }
+
+    const { luongCB, phuCap } = config;
+    const thueTNCN = parseFloat((luongCB * 0.10 ).toFixed(2));
+    const bhxh     = parseFloat((luongCB * 0.08 ).toFixed(2));
+    const bhyt     = parseFloat((luongCB * 0.015).toFixed(2));
+    const bhtn     = parseFloat((luongCB * 0.01 ).toFixed(2));
+    const thucLinh = parseFloat((luongCB + phuCap - thueTNCN - bhxh - bhyt - bhtn).toFixed(2));
+    const MaBL     = `BL${nv.MaNV1}${n}${String(t).padStart(2, '0')}`;
+
+    const [, wasCreated] = await BangLuong.findOrCreate({
+      where: { MaBL },
+      defaults: { MaBL, MaNV1: nv.MaNV1, Thang: t, Nam: n, LuongCB: luongCB, PhuCap: phuCap, ThueTNCN: thueTNCN, BHXH: bhxh, BHYT: bhyt, BHTN: bhtn, ThucLinh: thucLinh },
+    });
+
+    if (wasCreated) {
+      details.push({ MaNV1: nv.MaNV1, TenNV: nv.TenNV, status: 'created', ThucLinh: thucLinh });
+      created++;
+    } else {
+      details.push({ MaNV1: nv.MaNV1, TenNV: nv.TenNV, status: 'exists' });
+      skipped++;
+    }
+  }
+
+  return {
+    created,
+    skipped,
+    message: created > 0
+      ? `Tháng ${t}/${n}: đã tạo ${created} bảng lương mới${skipped > 0 ? `, bỏ qua ${skipped} đã có.` : '.'}`
+      : `Tháng ${t}/${n}: tất cả ${skipped} nhân viên đã có bảng lương từ trước, không cần tạo mới.`,
+    duAns: duAns.map((d) => d.TenDA),
+    details,
+  };
+};
+
+module.exports = { getAll, tinhLuong, remove, autoTinhLuongThang };

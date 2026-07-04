@@ -60,12 +60,12 @@ const getBangLuongCongTy = async ({ thang, nam }) => {
     order: [['nhanVien', 'MaPB', 'ASC']],
   });
 
-  const BH_RATE = 0.105; // 10.5% lương cơ bản (BHXH 8% + BHYT 1.5% + BHTN 1%)
-
   const items = rows.map((bl) => {
     const luongCB = parseFloat(bl.LuongCB || 0);
-    const phiBH = parseFloat((luongCB * BH_RATE).toFixed(2));
-    const thucLinh = parseFloat(bl.ThucLinh || 0);
+    const bhxh = parseFloat(bl.BHXH || 0);
+    const bhyt = parseFloat(bl.BHYT || 0);
+    const bhtn = parseFloat(bl.BHTN || 0);
+    const phiBH = parseFloat((bhxh + bhyt + bhtn).toFixed(2));
     return {
       MaBL: bl.MaBL,
       MaNV1: bl.MaNV1,
@@ -75,7 +75,7 @@ const getBangLuongCongTy = async ({ thang, nam }) => {
       PhuCap: parseFloat(bl.PhuCap || 0),
       ThueTNCN: parseFloat(bl.ThueTNCN || 0),
       PhiBH: phiBH,
-      ThucLinh: parseFloat((thucLinh - phiBH).toFixed(2)),
+      ThucLinh: parseFloat(bl.ThucLinh || 0),
     };
   });
 

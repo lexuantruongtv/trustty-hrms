@@ -3,7 +3,8 @@ import {
   DialogTitle, Divider, FormControl, IconButton, InputAdornment, InputLabel,
   MenuItem, Select, Stack, Table, TableBody, TableCell, TableContainer,
   TableHead, TablePagination, TableRow, TextField, Tooltip, Typography,
-} from '@mui/material';import AddIcon from '@mui/icons-material/Add';
+} from '@mui/material';import AutorenewIcon from '@mui/icons-material/Autorenew';
+import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PrintIcon from '@mui/icons-material/Print';
@@ -12,7 +13,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useCallback, useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { calculatePayroll, deletePayroll, getPayroll } from '../api/payroll';
+import { calculatePayroll, autoCalculatePayroll, deletePayroll, getPayroll } from '../api/payroll';
 import { getEmployees } from '../api/employees';
 import EmptyState from '../components/common/EmptyState';
 import PageHeader from '../components/common/PageHeader';
@@ -646,6 +647,10 @@ const Payroll = () => {
   const [search, setSearch] = useState('');
   const [filterThang, setFilterThang] = useState('');
   const [filterNam, setFilterNam] = useState('');
+  const [autoCalcOpen, setAutoCalcOpen] = useState(false);
+  const [autoCalcLoading, setAutoCalcLoading] = useState(false);
+  const [autoCalcThang, setAutoCalcThang] = useState(new Date().getMonth() + 1);
+  const [autoCalcNam, setAutoCalcNam] = useState(new Date().getFullYear());
   const canManage = ['Admin', 'Ketoan'].includes(user?.PhanQuyen);
 
   const fetchData = useCallback(async () => {
@@ -683,6 +688,28 @@ const Payroll = () => {
     }
   };
 
+  const handleAutoCalc = async () => {
+    setAutoCalcLoading(true);
+    try {
+      const res = await autoCalculatePayroll({ thang: autoCalcThang, nam: autoCalcNam });
+      const { created, skipped, message, duAns } = res.data.data;
+      const duAnStr = duAns?.length ? `\nDự án: ${duAns.join(', ')}` : '';
+      if (created > 0) {
+        toast.success(`${message}${duAnStr}`);
+        fetchData();
+      } else if (skipped > 0) {
+        toast.warning(`${message}${duAnStr}`);
+      } else {
+        toast.info(message);
+      }
+      setAutoCalcOpen(false);
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Lỗi khi tính lương tự động');
+    } finally {
+      setAutoCalcLoading(false);
+    }
+  };
+
   return (
     <Box>
       <PageHeader
@@ -691,6 +718,9 @@ const Payroll = () => {
           <Stack direction="row" spacing={1}>
             <Button variant="outlined" color="error" startIcon={<PictureAsPdfIcon />} onClick={() => setExportOpen(true)}>
               Xuất phiếu lương
+            </Button>
+            <Button variant="outlined" startIcon={<AutorenewIcon />} onClick={() => setAutoCalcOpen(true)}>
+              Tính lương tự động
             </Button>
             <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
               Tính lương
@@ -733,7 +763,7 @@ const Payroll = () => {
                 <TableCell align="right">Phụ cấp</TableCell>
                 <TableCell align="right">Thuế TNCN (10%)</TableCell>
                 <TableCell align="right">Phí BH (10,5%)</TableCell>
-                <TableCell align="right">Biến động</TableCell>
+                <TableCell align="right" sx={{ minWidth: 110 }}>Biến động</TableCell>
                 <TableCell align="right">Thực lĩnh</TableCell>
                 <TableCell align="center" sx={{ minWidth: 100 }}>Thao tác</TableCell>
               </TableRow>
@@ -824,6 +854,46 @@ const Payroll = () => {
 
       <PayrollForm open={dialogOpen} onClose={() => setDialogOpen(false)} onSave={handleCalculate} employees={employees} />
       <ExportDialog open={exportOpen} onClose={() => setExportOpen(false)} employees={employees} filterThang={filterThang} filterNam={filterNam} />
+
+      {/* Dialog tính lương tự động theo tháng */}
+      <Dialog open={autoCalcOpen} onClose={() => !autoCalcLoading && setAutoCalcOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Tính lương tự động</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Hệ thống sẽ tự động tạo bảng lương cho tất cả nhân viên tham gia dự án trong tháng được chọn.
+            Nếu tháng đó không có dự án nào đang thực hiện sẽ bỏ qua.
+          </Typography>
+          <Stack direction="row" spacing={2}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Tháng</InputLabel>
+              <Select value={autoCalcThang} label="Tháng" onChange={(e) => setAutoCalcThang(e.target.value)}>
+                {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                  <MenuItem key={m} value={m}>Tháng {m}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth size="small">
+              <InputLabel>Năm</InputLabel>
+              <Select value={autoCalcNam} label="Năm" onChange={(e) => setAutoCalcNam(e.target.value)}>
+                {Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - i + 1).map((y) => (
+                  <MenuItem key={y} value={y}>{y}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button onClick={() => setAutoCalcOpen(false)} variant="outlined" disabled={autoCalcLoading}>Hủy</Button>
+          <Button
+            onClick={handleAutoCalc}
+            variant="contained"
+            disabled={autoCalcLoading}
+            startIcon={<AutorenewIcon />}
+          >
+            {autoCalcLoading ? 'Đang xử lý...' : 'Tính lương'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
