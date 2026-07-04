@@ -153,12 +153,17 @@ const SalaryChanges = () => {
                 <TableRow><TableCell colSpan={5}><EmptyState message="Chưa có biến động lương" /></TableCell></TableRow>
               ) : data.items.map((bd) => (
                 <TableRow key={bd.MaBD} hover>
-                  <TableCell>
+                  <TableCell sx={{ minWidth: 200 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Avatar sx={{ width: 32, height: 32, bgcolor: '#0ea5e9', fontSize: 12 }}>
+                      <Avatar sx={{ width: 36, height: 36, bgcolor: '#0ea5e9', fontSize: 12 }}>
                         {getInitials(bd.nhanVien?.TenNV)}
                       </Avatar>
-                      <Typography variant="body2" fontWeight={600}>{bd.nhanVien?.TenNV}</Typography>
+                      <Box>
+                        <Typography variant="body2" fontWeight={600}>{bd.nhanVien?.TenNV}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {[bd.nhanVien?.chucVu?.TenCV, bd.nhanVien?.phongBan?.TenPB].filter(Boolean).join(' · ')}
+                        </Typography>
+                      </Box>
                     </Box>
                   </TableCell>
                   <TableCell>

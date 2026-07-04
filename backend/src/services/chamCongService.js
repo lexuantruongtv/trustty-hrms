@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { ChamCong, NhanVien } = require('../models');
+const { ChamCong, NhanVien, ChucVu, PhongBan } = require('../models');
 const { getPagination, getPagingData } = require('../utils/pagination');
 
 const getAll = async (query) => {
@@ -17,7 +17,13 @@ const getAll = async (query) => {
   }
   const data = await ChamCong.findAndCountAll({
     where, limit, offset,
-    include: [{ model: NhanVien, as: 'nhanVien', attributes: ['TenNV', 'Avatar'] }],
+    include: [{
+      model: NhanVien, as: 'nhanVien', attributes: ['TenNV', 'Avatar'],
+      include: [
+        { model: ChucVu, as: 'chucVu', attributes: ['TenCV'] },
+        { model: PhongBan, as: 'phongBan', attributes: ['TenPB'] },
+      ],
+    }],
     order: [['Ngay', 'DESC']],
   });
   return getPagingData(data, page, limit);

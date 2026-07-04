@@ -116,10 +116,15 @@ const Leave = () => {
                 <TableRow key={np.MaDon} hover>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Avatar sx={{ width: 32, height: 32, bgcolor: '#ec4899', fontSize: 12 }}>
+                      <Avatar sx={{ width: 36, height: 36, bgcolor: '#ec4899', fontSize: 12 }}>
                         {getInitials(np.nhanVien?.TenNV)}
                       </Avatar>
-                      <Typography variant="body2" fontWeight={600}>{np.nhanVien?.TenNV}</Typography>
+                      <Box>
+                        <Typography variant="body2" fontWeight={600}>{np.nhanVien?.TenNV}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {[np.nhanVien?.chucVu?.TenCV, np.nhanVien?.phongBan?.TenPB].filter(Boolean).join(' · ')}
+                        </Typography>
+                      </Box>
                     </Box>
                   </TableCell>
                   <TableCell>{formatDate(np.NgayBD)}</TableCell>

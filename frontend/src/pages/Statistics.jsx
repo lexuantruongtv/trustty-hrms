@@ -148,7 +148,7 @@ const TabBangLuong = () => {
     try {
       const res = await getBangLuongCongTy({ thang, nam });
       setData(res.data.data);
-    } catch { setData({ items: [], tongLuongCB: 0, tongPhuCap: 0, tongThue: 0, tongThucLinh: 0 }); }
+    } catch { setData({ items: [], tongLuongCB: 0, tongPhuCap: 0, tongThue: 0, tongPhiBH: 0, tongThucLinh: 0 }); }
   }, [thang, nam]);
 
   useEffect(() => { loadData(); }, [loadData]);
@@ -173,10 +173,11 @@ const TabBangLuong = () => {
       {data && (
         <>
           <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid size={{ xs: 6, sm: 3 }}><SummaryCard label="Tổng lương cơ bản" value={formatCurrency(data.tongLuongCB)} color="#6366f1" /></Grid>
-            <Grid size={{ xs: 6, sm: 3 }}><SummaryCard label="Tổng phụ cấp" value={formatCurrency(data.tongPhuCap)} color="#f59e0b" /></Grid>
-            <Grid size={{ xs: 6, sm: 3 }}><SummaryCard label="Tổng thuế TNCN" value={formatCurrency(data.tongThue)} color="#ef4444" /></Grid>
-            <Grid size={{ xs: 6, sm: 3 }}><SummaryCard label="Tổng thực lĩnh" value={formatCurrency(data.tongThucLinh)} color="#10b981" /></Grid>
+            <Grid size={{ xs: 6, sm: 2.4 }}><SummaryCard label="Tổng lương cơ bản" value={formatCurrency(data.tongLuongCB)} color="#6366f1" /></Grid>
+            <Grid size={{ xs: 6, sm: 2.4 }}><SummaryCard label="Tổng phụ cấp" value={formatCurrency(data.tongPhuCap)} color="#f59e0b" /></Grid>
+            <Grid size={{ xs: 6, sm: 2.4 }}><SummaryCard label="Tổng thuế TNCN" value={formatCurrency(data.tongThue)} color="#ef4444" /></Grid>
+            <Grid size={{ xs: 6, sm: 2.4 }}><SummaryCard label="Phí BH (10.5%)" value={formatCurrency(data.tongPhiBH)} color="#8b5cf6" /></Grid>
+            <Grid size={{ xs: 6, sm: 2.4 }}><SummaryCard label="Tổng thực lĩnh" value={formatCurrency(data.tongThucLinh)} color="#10b981" /></Grid>
           </Grid>
 
           <Card>
@@ -189,12 +190,13 @@ const TabBangLuong = () => {
                     <TableCell align="right">Lương CB</TableCell>
                     <TableCell align="right">Phụ cấp</TableCell>
                     <TableCell align="right">Thuế TNCN</TableCell>
+                    <TableCell align="right">Phí BH (10.5%)</TableCell>
                     <TableCell align="right">Thực lĩnh</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {data.items.length === 0
-                    ? <TableRow><TableCell colSpan={6}><EmptyState message={`Chưa có dữ liệu lương tháng ${thang}/${nam}`} /></TableCell></TableRow>
+                    ? <TableRow><TableCell colSpan={7}><EmptyState message={`Chưa có dữ liệu lương tháng ${thang}/${nam}`} /></TableCell></TableRow>
                     : data.items.map((r) => (
                       <TableRow key={r.MaBL} hover>
                         <TableCell sx={{ fontWeight: 600 }}>{r.TenNV}</TableCell>
@@ -202,6 +204,7 @@ const TabBangLuong = () => {
                         <TableCell align="right">{formatCurrency(r.LuongCB)}</TableCell>
                         <TableCell align="right">{formatCurrency(r.PhuCap)}</TableCell>
                         <TableCell align="right" sx={{ color: 'error.main' }}>{formatCurrency(r.ThueTNCN)}</TableCell>
+                        <TableCell align="right" sx={{ color: '#8b5cf6' }}>{formatCurrency(r.PhiBH)}</TableCell>
                         <TableCell align="right" sx={{ fontWeight: 700, color: 'success.main' }}>{formatCurrency(r.ThucLinh)}</TableCell>
                       </TableRow>
                     ))}
@@ -211,6 +214,7 @@ const TabBangLuong = () => {
                       <TableCell align="right" sx={{ fontWeight: 700 }}>{formatCurrency(data.tongLuongCB)}</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 700 }}>{formatCurrency(data.tongPhuCap)}</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 700, color: 'error.main' }}>{formatCurrency(data.tongThue)}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 700, color: '#8b5cf6' }}>{formatCurrency(data.tongPhiBH)}</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 700, color: 'success.main' }}>{formatCurrency(data.tongThucLinh)}</TableCell>
                     </TableRow>
                   )}

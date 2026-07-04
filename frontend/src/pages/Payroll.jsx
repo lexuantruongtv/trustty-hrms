@@ -727,7 +727,7 @@ const Payroll = () => {
           <Table>
             <TableHead>
               <TableRow sx={{ '& th': { fontWeight: 700, bgcolor: 'action.hover' } }}>
-                <TableCell>Nhân viên</TableCell>
+                <TableCell sx={{ minWidth: 280 }}>Nhân viên</TableCell>
                 <TableCell>Tháng/Năm</TableCell>
                 <TableCell align="right">Lương CB</TableCell>
                 <TableCell align="right">Phụ cấp</TableCell>
@@ -735,7 +735,7 @@ const Payroll = () => {
                 <TableCell align="right">Phí BH (10,5%)</TableCell>
                 <TableCell align="right">Biến động</TableCell>
                 <TableCell align="right">Thực lĩnh</TableCell>
-                <TableCell align="center">Thao tác</TableCell>
+                <TableCell align="center" sx={{ minWidth: 100 }}>Thao tác</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

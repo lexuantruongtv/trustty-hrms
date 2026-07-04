@@ -1,4 +1,4 @@
-const { BienDongLuong, NhanVien } = require('../models');
+const { BienDongLuong, NhanVien, ChucVu, PhongBan } = require('../models');
 const { success } = require('../utils/response');
 const { getPagination, getPagingData } = require('../utils/pagination');
 
@@ -9,7 +9,13 @@ const getAll = async (req, res, next) => {
     if (req.query.MaNV1) where.MaNV1 = req.query.MaNV1;
     const data = await BienDongLuong.findAndCountAll({
       where, limit, offset,
-      include: [{ model: NhanVien, as: 'nhanVien', attributes: ['TenNV', 'MaNV1'] }],
+      include: [{
+        model: NhanVien, as: 'nhanVien', attributes: ['TenNV', 'MaNV1'],
+        include: [
+          { model: ChucVu, as: 'chucVu', attributes: ['TenCV'] },
+          { model: PhongBan, as: 'phongBan', attributes: ['TenPB'] },
+        ],
+      }],
       order: [['NgayQuyetDinh', 'DESC']],
     });
     success(res, getPagingData(data, page, limit));

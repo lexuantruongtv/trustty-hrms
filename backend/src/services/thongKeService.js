@@ -60,23 +60,32 @@ const getBangLuongCongTy = async ({ thang, nam }) => {
     order: [['nhanVien', 'MaPB', 'ASC']],
   });
 
-  const items = rows.map((bl) => ({
-    MaBL: bl.MaBL,
-    MaNV1: bl.MaNV1,
-    TenNV: bl.nhanVien?.TenNV,
-    TenPB: bl.nhanVien?.phongBan?.TenPB,
-    LuongCB: parseFloat(bl.LuongCB || 0),
-    PhuCap: parseFloat(bl.PhuCap || 0),
-    ThueTNCN: parseFloat(bl.ThueTNCN || 0),
-    ThucLinh: parseFloat(bl.ThucLinh || 0),
-  }));
+  const BH_RATE = 0.105; // 10.5% lương cơ bản (BHXH 8% + BHYT 1.5% + BHTN 1%)
+
+  const items = rows.map((bl) => {
+    const luongCB = parseFloat(bl.LuongCB || 0);
+    const phiBH = parseFloat((luongCB * BH_RATE).toFixed(2));
+    const thucLinh = parseFloat(bl.ThucLinh || 0);
+    return {
+      MaBL: bl.MaBL,
+      MaNV1: bl.MaNV1,
+      TenNV: bl.nhanVien?.TenNV,
+      TenPB: bl.nhanVien?.phongBan?.TenPB,
+      LuongCB: luongCB,
+      PhuCap: parseFloat(bl.PhuCap || 0),
+      ThueTNCN: parseFloat(bl.ThueTNCN || 0),
+      PhiBH: phiBH,
+      ThucLinh: parseFloat((thucLinh - phiBH).toFixed(2)),
+    };
+  });
 
   const tongLuongCB = items.reduce((s, r) => s + r.LuongCB, 0);
   const tongPhuCap = items.reduce((s, r) => s + r.PhuCap, 0);
   const tongThue = items.reduce((s, r) => s + r.ThueTNCN, 0);
+  const tongPhiBH = items.reduce((s, r) => s + r.PhiBH, 0);
   const tongThucLinh = items.reduce((s, r) => s + r.ThucLinh, 0);
 
-  return { thang: t, nam: n, items, tongLuongCB, tongPhuCap, tongThue, tongThucLinh };
+  return { thang: t, nam: n, items, tongLuongCB, tongPhuCap, tongThue, tongPhiBH, tongThucLinh };
 };
 
 // Chi phí nhân sự theo phòng ban (lương + biến động)

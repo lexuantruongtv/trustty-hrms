@@ -135,10 +135,15 @@ const Attendance = () => {
                 <TableRow key={cc.MaCC} hover>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Avatar sx={{ width: 32, height: 32, bgcolor: '#6366f1', fontSize: 12 }}>
+                      <Avatar sx={{ width: 36, height: 36, bgcolor: '#6366f1', fontSize: 12 }}>
                         {getInitials(cc.nhanVien?.TenNV)}
                       </Avatar>
-                      <Typography variant="body2" fontWeight={600}>{cc.nhanVien?.TenNV}</Typography>
+                      <Box>
+                        <Typography variant="body2" fontWeight={600}>{cc.nhanVien?.TenNV}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {[cc.nhanVien?.chucVu?.TenCV, cc.nhanVien?.phongBan?.TenPB].filter(Boolean).join(' · ')}
+                        </Typography>
+                      </Box>
                     </Box>
                   </TableCell>
                   <TableCell>{formatDate(cc.Ngay)}</TableCell>
