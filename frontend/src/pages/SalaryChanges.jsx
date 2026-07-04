@@ -66,7 +66,7 @@ const buildDocHTML = (bd, docType) => {
     const soQD = `${String(bd.MaBD).padStart(3, '0')}/QĐ-KT`;
     return `<!DOCTYPE html><html><head><meta charset="UTF-8">${style}</head><body>
       <div class="header-row">
-        <div><div class="bold">CÔNG TY CỔ PHẦN TRUSTTY</div><div>Số: ${soQD}</div></div>
+        <div><div class="bold">CÔNG TY PHẦN MỀM TRUSTTY</div><div>Số: ${soQD}</div></div>
         <div class="center"><div class="bold">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div><div>Độc lập – Tự do – Hạnh phúc</div><hr><div style="font-style:italic">Hà Nội, ${ngay}</div></div>
       </div>
       <div class="center">
@@ -74,9 +74,9 @@ const buildDocHTML = (bd, docType) => {
         <div class="subtitle">Về việc ${bd.HinhThuc?.toLowerCase()} cho nhân viên</div>
       </div>
       <div class="body">
-        <div class="bold center">GIÁM ĐỐC CÔNG TY CỔ PHẦN TRUSTTY</div>
+        <div class="bold center">GIÁM ĐỐC CÔNG TY PHẦN MỀM TRUSTTY</div>
         <p>Căn cứ Bộ luật Lao động số 45/2019/QH14 ngày 20/11/2019;</p>
-        <p>Căn cứ Quy chế lương thưởng của Công ty Cổ phần TrustTY;</p>
+        <p>Căn cứ Quy chế lương thưởng của Công ty Phần mềm TrustTY;</p>
         <p>Căn cứ đề nghị của Phòng Nhân Sự về việc khen thưởng nhân viên có thành tích xuất sắc;</p>
         <p><span class="bold">QUYẾT ĐỊNH:</span></p>
         <p><span class="bold">Điều 1.</span> ${bd.HinhThuc} cho Ông/Bà <span class="bold">${tenNV}</span>, chức vụ <span class="bold">${chucVu}</span>, công tác tại <span class="bold">${phong}</span>.</p>
@@ -87,8 +87,8 @@ const buildDocHTML = (bd, docType) => {
         <p><span class="bold">Điều 3.</span> Phòng Nhân Sự, Phòng Kế Toán và Ông/Bà <span class="bold">${tenNV}</span> chịu trách nhiệm thi hành Quyết định này.</p>
       </div>
       <div class="sign">
-        <div class="sign-block"><div>Người nhận</div><div style="font-style:italic;font-size:11pt">(Ký, ghi rõ họ tên)</div></br><div class="sign-line">${tenNV}</div></div>
-        <div class="sign-block"><div>TM. BAN GIÁM ĐỐC</div><div class="bold">GIÁM ĐỐC</div><div style="font-style:italic;font-size:11pt">(Ký, đóng dấu)</div><div class="sign-line"></div></div>
+        <div class="sign-block"><div>Người nhận</div><div style="font-style:italic;font-size:11pt">(Ký, ghi rõ họ tên)</div></br><div class="sign-line"></div></div>
+        <div class="sign-block"><div>TM. BAN GIÁM ĐỐC</div><div class="bold">GIÁM ĐỐC</div><div style="font-style:italic;font-size:11pt">(Ký, đóng dấu)</div><div class="sign-line"> </div></div>
       </div>
     </body></html>`;
   }
@@ -97,27 +97,27 @@ const buildDocHTML = (bd, docType) => {
   const soBB = `${String(bd.MaBD).padStart(3, '0')}/BB-XL`;
   return `<!DOCTYPE html><html><head><meta charset="UTF-8">${style}</head><body>
     <div class="header-row">
-      <div><div class="bold">CÔNG TY CỔ PHẦN TRUSTTY</div><div>Số: ${soBB}</div></div>
+      <div><div class="bold">CÔNG TY PHẦN MỀM TRUSTTY</div><div>Số: ${soBB}</div></div>
       <div class="center"><div class="bold">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div><div>Độc lập – Tự do – Hạnh phúc</div><hr><div style="font-style:italic">Hà Nội, ${ngay}</div></div>
     </div>
     <div class="center">
       <div class="title">Biên bản xử lý vi phạm kỷ luật lao động</div>
     </div>
     <div class="body">
-      <p>Hôm nay, ${ngay}, tại Công ty Cổ phần TrustTY, chúng tôi gồm:</p>
-      <p><span class="bold">Bên lập biên bản:</span> Đại diện Ban Giám Đốc và Phòng Nhân Sự Công ty Cổ phần TrustTY.</p>
+      <p>Hôm nay, ${ngay}, tại Công ty Phần mềm TrustTY, chúng tôi gồm:</p>
+      <p><span class="bold">Bên lập biên bản:</span> Đại diện Ban Giám Đốc và Phòng Nhân Sự Công ty Phần mềm TrustTY.</p>
       <p><span class="bold">Người vi phạm:</span> Ông/Bà <span class="bold">${tenNV}</span>, chức vụ <span class="bold">${chucVu}</span>, công tác tại <span class="bold">${phong}</span>.</p>
       <p><span class="bold">Nội dung vi phạm:</span> ${noiDung}.</p>
       <p><span class="bold">Căn cứ xử lý:</span></p>
       <p style="padding-left:24px">– Bộ luật Lao động số 45/2019/QH14 ngày 20/11/2019, Điều 127 về xử lý kỷ luật lao động;</p>
-      <p style="padding-left:24px">– Nội quy lao động và Quy chế lương thưởng của Công ty Cổ phần TrustTY.</p>
+      <p style="padding-left:24px">– Nội quy lao động và Quy chế lương thưởng của Công ty Phần mềm TrustTY.</p>
       <p><span class="bold">Hình thức xử lý:</span> ${bd.HinhThuc} với mức <span class="bold">${soTien}</span>.</p>
       <p><span class="bold">Ý kiến của người vi phạm:</span> .......................................................................................................</p>
       <p>Biên bản được lập thành 02 bản có giá trị pháp lý như nhau, mỗi bên giữ 01 bản.</p>
     </div>
     <div class="sign">
-      <div class="sign-block"><div>Người vi phạm</div><div style="font-style:italic;font-size:11pt">(Ký, ghi rõ họ tên)</div></br><div class="sign-line">${tenNV}</div></div>
-      <div class="sign-block"><div>TM. BAN GIÁM ĐỐC</div><div class="bold">GIÁM ĐỐC</div><div style="font-style:italic;font-size:11pt">(Ký, đóng dấu)</div><div class="sign-line"></div></div>
+      <div class="sign-block"><div>Người vi phạm</div><div style="font-style:italic;font-size:11pt">(Ký, ghi rõ họ tên)</div></br><div class="sign-line"></div></div>
+      <div class="sign-block"><div>TM. BAN GIÁM ĐỐC</div><div class="bold">GIÁM ĐỐC</div><div style="font-style:italic;font-size:11pt">(Ký, đóng dấu)</div><div class="sign-line"> </div></div>
     </div>
   </body></html>`;
 };
