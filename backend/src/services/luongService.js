@@ -86,12 +86,18 @@ const remove = async (id) => {
  */
 const LUONG_THEO_CV = {
   CV001: { luongCB: 50000000, phuCap: 10000000 }, // Giám Đốc
-  CV002: { luongCB: 30000000, phuCap:  5000000 }, // Trưởng Phòng
+  CV002: { luongCB: 30000000, phuCap:  5000000 }, // Trưởng Phòng (Kỹ Thuật)
   CV007: { luongCB: 28000000, phuCap:  4000000 }, // Quản Lý
   CV005: { luongCB: 25000000, phuCap:  4000000 }, // Senior Developer
-  CV003: { luongCB: 18000000, phuCap:  2000000 }, // Nhân Viên
+  CV003: { luongCB: 18000000, phuCap:  2000000 }, // Nhân Viên (Kỹ Thuật)
   CV006: { luongCB: 14000000, phuCap:  1500000 }, // Junior Developer
   CV004: { luongCB:  8000000, phuCap:   500000 }, // Thực Tập Sinh
+};
+
+// Thang lương riêng cho nhân viên hành chính (phòng khác Kỹ Thuật)
+const LUONG_HANH_CHINH = {
+  CV002: { luongCB: 20000000, phuCap: 3000000 }, // Trưởng Phòng HC
+  CV003: { luongCB: 12000000, phuCap: 1500000 }, // Nhân Viên HC
 };
 
 const autoTinhLuongThang = async ({ thang, nam }) => {
@@ -114,7 +120,53 @@ const autoTinhLuongThang = async ({ thang, nam }) => {
   });
 
   if (duAns.length === 0) {
-    return { created: 0, skipped: 0, message: `Tháng ${t}/${n} không có dự án nào đang thực hiện, bỏ qua.`, details: [] };
+    // Không có dự án nhưng vẫn tính lương cố định cho phòng khác Kỹ Thuật + Giám đốc
+    const nvCoDinh = await NhanVien.findAll({
+      where: {
+        [Op.or]: [
+          { MaCV: 'CV001' },
+          { MaPB: { [Op.ne]: 'PB002' }, MaCV: { [Op.ne]: 'CV001' } },
+        ],
+        TrangThai: 'Đang làm việc',
+      },
+      attributes: ['MaNV1', 'TenNV', 'MaCV'],
+    });
+
+    if (nvCoDinh.length === 0) {
+      return { created: 0, skipped: 0, message: `Tháng ${t}/${n} không có dự án nào đang thực hiện, bỏ qua.`, details: [], duAns: [] };
+    }
+
+    let created = 0, skipped = 0;
+    const details = [];
+    for (const nv of nvCoDinh) {
+      // Giám đốc dùng thang lương chung, phòng khác KT dùng thang HC
+      const isHanhChinh = nv.MaCV !== 'CV001';
+      const config = isHanhChinh
+        ? (LUONG_HANH_CHINH[nv.MaCV] || LUONG_THEO_CV[nv.MaCV])
+        : LUONG_THEO_CV[nv.MaCV];
+      if (!config) { skipped++; continue; }
+      const { luongCB, phuCap } = config;
+      const thueTNCN = parseFloat((luongCB * 0.10 ).toFixed(2));
+      const bhxh     = parseFloat((luongCB * 0.08 ).toFixed(2));
+      const bhyt     = parseFloat((luongCB * 0.015).toFixed(2));
+      const bhtn     = parseFloat((luongCB * 0.01 ).toFixed(2));
+      const thucLinh = parseFloat((luongCB + phuCap - thueTNCN - bhxh - bhyt - bhtn).toFixed(2));
+      const MaBL     = `BL${nv.MaNV1}${n}${String(t).padStart(2, '0')}`;
+      const [, wasCreated] = await BangLuong.findOrCreate({
+        where: { MaBL },
+        defaults: { MaBL, MaNV1: nv.MaNV1, Thang: t, Nam: n, LuongCB: luongCB, PhuCap: phuCap, ThueTNCN: thueTNCN, BHXH: bhxh, BHYT: bhyt, BHTN: bhtn, ThucLinh: thucLinh },
+      });
+      if (wasCreated) { details.push({ MaNV1: nv.MaNV1, TenNV: nv.TenNV, status: 'created', ThucLinh: thucLinh }); created++; }
+      else { details.push({ MaNV1: nv.MaNV1, TenNV: nv.TenNV, status: 'exists' }); skipped++; }
+    }
+    return {
+      created, skipped,
+      message: created > 0
+        ? `Tháng ${t}/${n}: đã tạo ${created} bảng lương cố định mới${skipped > 0 ? `, bỏ qua ${skipped} đã có.` : '.'}`
+        : `Tháng ${t}/${n}: tất cả ${skipped} nhân viên đã có bảng lương từ trước, không cần tạo mới.`,
+      duAns: [],
+      details,
+    };
   }
 
   // 2. Nhân viên tham gia dự án + Giám đốc
@@ -131,17 +183,32 @@ const autoTinhLuongThang = async ({ thang, nam }) => {
   });
   giamDocs.forEach((gd) => maNVSet.add(gd.MaNV1));
 
+  // 2b. Nhân viên phòng khác Kỹ Thuật (lương cố định hàng tháng, không phụ thuộc dự án)
+  const nvPhongKhac = await NhanVien.findAll({
+    where: { MaPB: { [Op.ne]: 'PB002' }, MaCV: { [Op.ne]: 'CV001' }, TrangThai: 'Đang làm việc' },
+    attributes: ['MaNV1'],
+  });
+  nvPhongKhac.forEach((nv) => maNVSet.add(nv.MaNV1));
+
   // 3. Lấy thông tin chức vụ
   const nhanViens = await NhanVien.findAll({
     where: { MaNV1: { [Op.in]: [...maNVSet] }, TrangThai: 'Đang làm việc' },
-    attributes: ['MaNV1', 'TenNV', 'MaCV'],
+    attributes: ['MaNV1', 'TenNV', 'MaCV', 'MaPB'],
   });
+
+  // Set MaNV1 thuộc phòng khác KT để tra thang lương HC
+  const maNVPhongKhac = new Set(nvPhongKhac.map((nv) => nv.MaNV1));
 
   let created = 0, skipped = 0;
   const details = [];
 
   for (const nv of nhanViens) {
-    const config = LUONG_THEO_CV[nv.MaCV];
+    // Phòng khác KT (trừ Giám đốc) dùng thang lương HC
+    const isHanhChinh = maNVPhongKhac.has(nv.MaNV1);
+    const config = isHanhChinh
+      ? (LUONG_HANH_CHINH[nv.MaCV] || LUONG_THEO_CV[nv.MaCV])
+      : LUONG_THEO_CV[nv.MaCV];
+
     if (!config) {
       details.push({ MaNV1: nv.MaNV1, TenNV: nv.TenNV, status: 'skip', reason: `Không có cấu hình lương cho chức vụ ${nv.MaCV}` });
       skipped++;
