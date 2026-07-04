@@ -6,6 +6,7 @@ const Toast = Swal.mixin({
   showConfirmButton: false,
   timer: 3000,
   timerProgressBar: true,
+  customClass: { container: 'swal-on-top' },
 });
 
 const useToast = () => ({

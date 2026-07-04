@@ -45,6 +45,25 @@ const remove = async (id) => {
 };
 
 const phanCong = async (maDoan, maNV1, vaiTro, thoiGianTG) => {
+  // Kiểm tra dự án đích
+  const duAn = await DuAn.findByPk(maDoan);
+  if (!duAn) throw { status: 404, message: 'Không tìm thấy dự án' };
+
+  // Chỉ kiểm tra conflict khi dự án đích đang thực hiện
+  if (duAn.TrangThai === 'Đang thực hiện') {
+    const dangThamGia = await PhanCong.findOne({
+      where: { MaNV1: maNV1, MaDOAN: { [Op.ne]: maDoan } },
+      include: [{
+        model: DuAn, as: 'duAn',
+        where: { TrangThai: 'Đang thực hiện' },
+        attributes: ['TenDA'],
+      }],
+    });
+    if (dangThamGia) {
+      throw { status: 400, message: `Nhân viên đang tham gia dự án "${dangThamGia.duAn.TenDA}" (đang thực hiện). Không thể thêm vào dự án khác cùng lúc.` };
+    }
+  }
+
   const [pc, created] = await PhanCong.findOrCreate({
     where: { MaDOAN: maDoan, MaNV1: maNV1 },
     defaults: { VaiTro: vaiTro, ThoiGianTG: thoiGianTG || new Date() },

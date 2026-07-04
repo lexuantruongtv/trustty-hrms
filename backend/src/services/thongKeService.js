@@ -169,7 +169,7 @@ const getChenhLech = async ({ nam } = {}) => {
     },
   }) || 0);
 
-  // Chi phí từng tháng
+  // Chi phí và doanh thu từng tháng
   const monthlyData = await Promise.all(months.map(async (thang) => {
     const chiPhiDuAn = parseFloat(await DuAn.sum('ChiPhiThucTe', {
       where: {
@@ -180,21 +180,31 @@ const getChenhLech = async ({ nam } = {}) => {
         ],
       },
     }) || 0);
+    const doanhThuThang = parseFloat(await DuAn.sum('DoanhThu', {
+      where: {
+        [Op.and]: [
+          sequelize.where(fn('MONTH', col('NgayKT')), thang),
+          sequelize.where(fn('YEAR', col('NgayKT')), n),
+          { TrangThai: 'Hoàn thành' },
+        ],
+      },
+    }) || 0);
     const tongLuong = parseFloat(await BangLuong.sum('ThucLinh', { where: { Thang: thang, Nam: n } }) || 0);
     const chiPhiHD = parseFloat(await ChiPhiHoatDong.sum('SoTien', { where: { Thang: thang, Nam: n } }) || 0);
-    return { thang, chiPhiDuAn, tongLuong, chiPhiHD, tongChiPhi: chiPhiDuAn + tongLuong + chiPhiHD };
+    return { thang, chiPhiDuAn, doanhThuThang, tongLuong, chiPhiHD, tongChiPhi: chiPhiDuAn + tongLuong + chiPhiHD };
   }));
 
-  // Tính số dư tích lũy: bắt đầu từ tổng doanh thu, trừ dần chi phí từng tháng
-  let soDu = tongDoanhThuNam;
+  // Tính số dư tích lũy: mỗi tháng = số dư trước + doanh thu tháng - chi phí tháng
+  let soDu = 0;
   const items = monthlyData
-    .filter((r) => r.tongChiPhi > 0) // chỉ hiện tháng có chi phí
+    .filter((r) => r.tongChiPhi > 0 || r.doanhThuThang > 0)
     .map((r) => {
-      soDu -= r.tongChiPhi;
+      soDu += r.doanhThuThang - r.tongChiPhi;
       return {
         thang: r.thang,
         nam: n,
         chiPhiDuAn: r.chiPhiDuAn,
+        doanhThuThang: r.doanhThuThang,
         tongLuong: r.tongLuong,
         chiPhiHD: r.chiPhiHD,
         tongChiPhi: r.tongChiPhi,

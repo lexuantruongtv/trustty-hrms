@@ -6,7 +6,7 @@ import {
   DialogTitle, DialogContent, DialogActions,
 } from '@mui/material';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer, Legend, LineChart, Line, ReferenceLine,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, LineChart, Line, ReferenceLine,
 } from 'recharts';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
@@ -83,7 +83,7 @@ const TabDuAn = () => {
                       <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                       <XAxis dataKey="TenDA" tick={{ fontSize: 11 }} angle={-30} textAnchor="end" interval={0} height={50} />
                       <YAxis tickFormatter={(v) => `${(v / 1e6).toFixed(0)}M`} tick={{ fontSize: 11 }} />
-                      <Tooltip formatter={(v) => formatCurrency(v)} />
+                      <RechartsTooltip formatter={(v) => formatCurrency(v)} />
                       <Bar dataKey="DoanhThu" fill="#6366f1" name="Doanh thu" radius={[4, 4, 0, 0]} />
                       <Bar dataKey="ChiPhiThucTe" fill="#f59e0b" name="Chi phí TT" radius={[4, 4, 0, 0]} />
                       <Bar dataKey="LoiNhuan" fill="#10b981" name="Lợi nhuận" radius={[4, 4, 0, 0]} />
@@ -264,6 +264,7 @@ const TabChenhLech = () => {
 
   const chartData = data?.items?.map((r) => ({
     name: `T${r.thang}`,
+    'Doanh thu tháng': r.doanhThuThang,
     'Chi phí tháng': r.tongChiPhi,
     'Số dư tích lũy': r.soDuTichLuy,
   })) || [];
@@ -309,10 +310,10 @@ const TabChenhLech = () => {
                   Số dư tích lũy theo tháng năm {nam}
                 </Typography>
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
-                  Bắt đầu từ tổng doanh thu {formatCurrency(data.tongDoanhThuNam)}, trừ dần chi phí mỗi tháng
+                  Số dư tích lũy = Doanh thu tháng - Chi phí tháng + Số dư tháng trước
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 3, mb: 1.5, flexWrap: 'wrap' }}>
-                  {[{ color: '#f59e0b', label: 'Chi phí tháng' }, { color: '#6366f1', label: 'Số dư tích lũy' }].map((i) => (
+                  {[{ color: '#10b981', label: 'Doanh thu tháng' }, { color: '#f59e0b', label: 'Chi phí tháng' }, { color: '#6366f1', label: 'Số dư tích lũy' }].map((i) => (
                     <Box key={i.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                       <Box sx={{ width: 12, height: 12, borderRadius: 1, bgcolor: i.color, flexShrink: 0 }} />
                       <Typography variant="caption" color="text.secondary">{i.label}</Typography>
@@ -324,8 +325,9 @@ const TabChenhLech = () => {
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                     <YAxis tickFormatter={(v) => `${(v / 1e6).toFixed(0)}M`} tick={{ fontSize: 11 }} />
-                    <Tooltip formatter={(v) => formatCurrency(v)} />
+                    <RechartsTooltip formatter={(v) => formatCurrency(v)} />
                     <ReferenceLine y={0} stroke="#ef4444" strokeDasharray="4 2" label={{ value: 'Hòa vốn', position: 'insideTopRight', fontSize: 11, fill: '#ef4444' }} />
+                    <Line type="monotone" dataKey="Doanh thu tháng" stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                     <Line type="monotone" dataKey="Chi phí tháng" stroke="#f59e0b" strokeWidth={2} dot={{ r: 4 }} />
                     <Line type="monotone" dataKey="Số dư tích lũy" stroke="#6366f1" strokeWidth={2.5} dot={{ r: 5 }} activeDot={{ r: 7 }}
                       label={false} />
@@ -345,6 +347,7 @@ const TabChenhLech = () => {
                   <TableHead>
                     <TableRow sx={{ '& th': { fontWeight: 700, bgcolor: 'action.hover' } }}>
                       <TableCell>Tháng</TableCell>
+                      <TableCell align="right" sx={{ color: '#10b981' }}>Doanh thu</TableCell>
                       <TableCell align="right">CP dự án</TableCell>
                       <TableCell align="right">Lương NV</TableCell>
                       <TableCell align="right">CP hoạt động</TableCell>
@@ -356,6 +359,7 @@ const TabChenhLech = () => {
                     {data.items.map((r) => (
                       <TableRow key={r.thang} hover>
                         <TableCell sx={{ fontWeight: 600 }}>Tháng {r.thang}/{r.nam}</TableCell>
+                        <TableCell align="right" sx={{ color: '#10b981', fontWeight: 600 }}>{r.doanhThuThang > 0 ? `+${formatCurrency(r.doanhThuThang)}` : '—'}</TableCell>
                         <TableCell align="right">{formatCurrency(r.chiPhiDuAn)}</TableCell>
                         <TableCell align="right">{formatCurrency(r.tongLuong)}</TableCell>
                         <TableCell align="right">{formatCurrency(r.chiPhiHD)}</TableCell>
