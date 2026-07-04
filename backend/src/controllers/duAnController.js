@@ -53,6 +53,12 @@ const phanCong = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
+const checkMemberBusy = async (req, res, next) => {
+  try {
+    success(res, await svc.checkMemberBusy(req.params.id, req.params.maNV1));
+  } catch (e) { next(e); }
+};
+
 const huyPhanCong = async (req, res, next) => {
   try {
     await svc.huyPhanCong(req.params.id, req.params.maNV1);
@@ -117,4 +123,4 @@ const getNvChuaThamGia = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
-module.exports = { getAll, getById, getMyProjects, create, update, remove, phanCong, huyPhanCong, addNote, getNotes, getNvChuaThamGia };
+module.exports = { getAll, getById, getMyProjects, create, update, remove, phanCong, checkMemberBusy, huyPhanCong, addNote, getNotes, getNvChuaThamGia };

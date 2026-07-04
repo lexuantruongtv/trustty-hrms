@@ -11,6 +11,7 @@ router.post('/', authorize('Admin', 'HR', 'Manager'), ctrl.create);
 router.put('/:id', authorize('Admin', 'HR', 'Manager'), ctrl.update);
 router.delete('/:id', authorize('Admin'), ctrl.remove);
 router.post('/:id/assign', authorize('Admin', 'HR', 'Manager'), ctrl.phanCong);
+router.get('/:id/check-busy/:maNV1', authorize('Admin', 'HR', 'Manager'), ctrl.checkMemberBusy);
 router.delete('/:id/assign/:maNV1', authorize('Admin', 'HR', 'Manager'), ctrl.huyPhanCong);
 router.get('/:id/notes', ctrl.getNotes);
 router.post('/:id/notes', ctrl.addNote);
