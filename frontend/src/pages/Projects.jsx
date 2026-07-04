@@ -20,7 +20,7 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import SearchIcon from '@mui/icons-material/Search';
 import { motion } from 'framer-motion';
 import { useForm, Controller } from 'react-hook-form';
-import { getProjects, createProject, updateProject, deleteProject, assignMember, removeAssign, getNotes, addNote, getNvChuaThamGia } from '../api/projects';
+import { getProjects, createProject, updateProject, deleteProject, assignMember, checkMemberBusy, removeAssign, getNotes, addNote, getNvChuaThamGia } from '../api/projects';
 import { getEmployees } from '../api/employees';
 import PageHeader from '../components/common/PageHeader';
 import StatusChip from '../components/common/StatusChip';
@@ -112,7 +112,10 @@ const ProjectDetail = ({ open, onClose, project, onUpdated }) => {
 
   useEffect(() => {
     if (!open) return;
-    getEmployees({ limit: 200 }).then((r) => setEmployees(r.data.data?.items ?? [])).catch(() => {});
+    // Chỉ lấy nhân viên Phòng Kỹ Thuật (PB002) cho dự án
+    getEmployees({ limit: 200, MaPB: 'PB002', TrangThai: 'Đang làm việc' })
+      .then((r) => setEmployees(r.data.data?.items ?? []))
+      .catch(() => {});
   }, [open]);
 
   useEffect(() => {
@@ -134,6 +137,23 @@ const ProjectDetail = ({ open, onClose, project, onUpdated }) => {
   const handleAssign = async (data) => {
     if (!data.MaNV1) return;
     try {
+      // Kiểm tra NV có đang bận dự án nào không
+      const checkRes = await checkMemberBusy(project.MaDOAN, data.MaNV1);
+      const { busy, TenNV, duAnDangTham } = checkRes.data.data;
+
+      if (busy) {
+        const danhSach = duAnDangTham.map(da =>
+          `<li style="text-align:left;margin-bottom:4px"><b>${da.TenDA}</b> - ${da.VaiTro} </br>(${new Date(da.NgayBD).toLocaleDateString('vi-VN')} → ${new Date(da.NgayKT).toLocaleDateString('vi-VN')})</li>`
+        ).join('');
+
+        const confirmed = await toast.confirm(
+          `${TenNV} đang tham gia dự án khác`,
+          `<ul style="padding-left:16px;margin:8px 0">${danhSach}</ul><div style="margin-top:10px"></br>Bạn vẫn muốn thêm vào dự án này không?</div>`,
+          true
+        );
+        if (!confirmed.isConfirmed) return;
+      }
+
       await assignMember(project.MaDOAN, { MaNV1: data.MaNV1, VaiTro: data.VaiTro, ThoiGianTG: data.ThoiGianTG });
       toast.success('Đã thêm thành viên');
       reset({ MaNV1: '', VaiTro: '', ThoiGianTG: '' });

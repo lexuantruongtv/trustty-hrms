@@ -14,10 +14,10 @@ const useToast = () => ({
   error: (msg) => Toast.fire({ icon: 'error', title: msg }),
   warning: (msg) => Toast.fire({ icon: 'warning', title: msg }),
   info: (msg) => Toast.fire({ icon: 'info', title: msg }),
-  confirm: (title, text) =>
+  confirm: (title, text, isHtml = false) =>
     Swal.fire({
       title,
-      text,
+      ...(isHtml ? { html: text } : { text }),
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#6366f1',
