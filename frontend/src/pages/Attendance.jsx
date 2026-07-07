@@ -2,18 +2,28 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box, Card, CardContent, Grid, Typography, Button, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow, TablePagination,
-  Avatar, CircularProgress, Chip,
+  Avatar, CircularProgress, Chip, TextField, InputAdornment, MenuItem,
+  FormControl, InputLabel, Select,
 } from '@mui/material';
 import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import SearchIcon from '@mui/icons-material/Search';
 import { motion } from 'framer-motion';
 import { getAttendance, checkIn, checkOut, getTodayStatus } from '../api/attendance';
+import { getDepartments } from '../api/departments';
 import PageHeader from '../components/common/PageHeader';
 import EmptyState from '../components/common/EmptyState';
 import useToast from '../hooks/useToast';
+import useDebounce from '../hooks/useDebounce';
 import useAuthStore from '../store/authStore';
 import { formatDate, getInitials } from '../utils/format';
+
+const TRANG_THAI = [
+  { value: '', label: 'Tất cả' },
+  { value: 'hoanThanh', label: 'Hoàn thành' },
+  { value: 'dangLam', label: 'Đang làm' },
+  { value: 'diTre', label: 'Đi trễ' },
+];
 
 const Attendance = () => {
   const toast = useToast();
@@ -25,21 +35,54 @@ const Attendance = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [now, setNow] = useState(new Date());
 
+  // Filter states
+  const [tenNV, setTenNV] = useState('');
+  const [thang, setThang] = useState('');
+  const [nam, setNam] = useState('');
+  const [maPB, setMaPB] = useState('');
+  const [trangThai, setTrangThai] = useState('');
+  const [phongBans, setPhongBans] = useState([]);
+
+  const debouncedTenNV = useDebounce(tenNV);
+
+  const isEmployee = user?.PhanQuyen === 'Employee';
+
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
+
+  useEffect(() => {
+    if (!isEmployee) {
+      getDepartments()
+        .then((r) => {
+          // API trả về array trực tiếp hoặc data.items
+          const list = r.data.data?.items || r.data.data || r.data || [];
+          setPhongBans(Array.isArray(list) ? list : []);
+        })
+        .catch(() => {});
+    }
+  }, [isEmployee]);
 
   const fetchToday = () => getTodayStatus().then((r) => setTodayStatus(r.data.data)).catch(() => {});
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const params = { page: page + 1, limit: 10, MaNV1: user?.PhanQuyen === 'Employee' ? user.MaNV1 : undefined };
+      const params = {
+        page: page + 1,
+        limit: 10,
+        MaNV1: isEmployee ? user.MaNV1 : undefined,
+        tenNV: debouncedTenNV || undefined,
+        thang: thang || undefined,
+        nam: nam || undefined,
+        MaPB: maPB || undefined,
+        trangThai: trangThai || undefined,
+      };
       const res = await getAttendance(params);
       setData(res.data.data);
     } catch { } finally { setLoading(false); }
-  }, [page, user]);
+  }, [page, user, isEmployee, debouncedTenNV, thang, nam, maPB, trangThai]);
 
   useEffect(() => { fetchToday(); fetchData(); }, [fetchData]);
 
@@ -59,6 +102,10 @@ const Attendance = () => {
 
   const canCheckIn = !todayStatus;
   const canCheckOut = todayStatus && !todayStatus.GioRa;
+
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
+  const months = Array.from({ length: 12 }, (_, i) => i + 1);
 
   return (
     <Box>
@@ -112,6 +159,53 @@ const Attendance = () => {
         </Card>
       </motion.div>
 
+      {/* Filter section */}
+      {!isEmployee && (
+        <Card sx={{ mb: 3, p: 2 }}>
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+            <TextField
+              placeholder="Tìm kiếm nhân viên..."
+              size="small"
+              sx={{ minWidth: 240 }}
+              value={tenNV}
+              onChange={(e) => { setTenNV(e.target.value); setPage(0); }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment>
+                ),
+              }}
+            />
+            <FormControl size="small" sx={{ minWidth: 130 }}>
+              <InputLabel>Tháng</InputLabel>
+              <Select value={thang} label="Tháng" onChange={(e) => { setThang(e.target.value); setPage(0); }}>
+                <MenuItem value="">Tất cả</MenuItem>
+                {months.map((m) => <MenuItem key={m} value={m}>Tháng {m}</MenuItem>)}
+              </Select>
+            </FormControl>
+            <FormControl size="small" sx={{ minWidth: 110 }}>
+              <InputLabel>Năm</InputLabel>
+              <Select value={nam} label="Năm" onChange={(e) => { setNam(e.target.value); setPage(0); }}>
+                <MenuItem value="">Tất cả</MenuItem>
+                {years.map((y) => <MenuItem key={y} value={y}>{y}</MenuItem>)}
+              </Select>
+            </FormControl>
+            <FormControl size="small" sx={{ minWidth: 180 }}>
+              <InputLabel>Phòng ban</InputLabel>
+              <Select value={maPB} label="Phòng ban" onChange={(e) => { setMaPB(e.target.value); setPage(0); }}>
+                <MenuItem value="">Tất cả</MenuItem>
+                {phongBans.map((pb) => <MenuItem key={pb.MaPB} value={pb.MaPB}>{pb.TenPB}</MenuItem>)}
+              </Select>
+            </FormControl>
+            <FormControl size="small" sx={{ minWidth: 150 }}>
+              <InputLabel>Trạng thái</InputLabel>
+              <Select value={trangThai} label="Trạng thái" onChange={(e) => { setTrangThai(e.target.value); setPage(0); }}>
+                {TRANG_THAI.map((t) => <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>)}
+              </Select>
+            </FormControl>
+          </Box>
+        </Card>
+      )}
+
       {/* History table */}
       <Card>
         <TableContainer>
@@ -131,36 +225,52 @@ const Attendance = () => {
                 <TableRow><TableCell colSpan={6} align="center" sx={{ py: 6 }}><CircularProgress /></TableCell></TableRow>
               ) : data.items.length === 0 ? (
                 <TableRow><TableCell colSpan={6}><EmptyState message="Chưa có dữ liệu chấm công" /></TableCell></TableRow>
-              ) : data.items.map((cc) => (
-                <TableRow key={cc.MaCC} hover>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Avatar sx={{ width: 36, height: 36, bgcolor: '#6366f1', fontSize: 12 }}>
-                        {getInitials(cc.nhanVien?.TenNV)}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="body2" fontWeight={600}>{cc.nhanVien?.TenNV}</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {[cc.nhanVien?.chucVu?.TenCV, cc.nhanVien?.phongBan?.TenPB].filter(Boolean).join(' · ')}
-                        </Typography>
+              ) : data.items.map((cc) => {
+                const isDiTre = cc.GioVao && cc.GioVao > '08:00:00';
+                return (
+                  <TableRow key={cc.MaCC} hover>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Avatar sx={{ width: 36, height: 36, bgcolor: '#6366f1', fontSize: 12 }}>
+                          {getInitials(cc.nhanVien?.TenNV)}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="body2" fontWeight={600}>{cc.nhanVien?.TenNV}</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {[cc.nhanVien?.chucVu?.TenCV, cc.nhanVien?.phongBan?.TenPB].filter(Boolean).join(' · ')}
+                          </Typography>
+                        </Box>
                       </Box>
-                    </Box>
-                  </TableCell>
-                  <TableCell>{formatDate(cc.Ngay)}</TableCell>
-                  <TableCell>{cc.GioVao || '—'}</TableCell>
-                  <TableCell>{cc.GioRa || '—'}</TableCell>
-                  <TableCell>
-                    {cc.SoGioLam ? <Chip label={`${cc.SoGioLam}h`} size="small" color="primary" /> : '—'}
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={cc.GioRa ? 'Hoàn thành' : 'Đang làm'}
-                      size="small"
-                      color={cc.GioRa ? 'success' : 'warning'}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell>{formatDate(cc.Ngay)}</TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        {cc.GioVao || '—'}
+                        {isDiTre && (
+                          <Chip label="Trễ" size="small" color="error" sx={{ height: 18, fontSize: 10 }} />
+                        )}
+                      </Box>
+                    </TableCell>
+                    <TableCell>{cc.GioRa || '—'}</TableCell>
+                    <TableCell>
+                      {cc.SoGioLam ? (
+                        <Chip
+                          label={`${cc.SoGioLam}h`}
+                          size="small"
+                          color={cc.SoGioLam < 8 ? 'warning' : 'primary'}
+                        />
+                      ) : '—'}
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={cc.GioRa ? 'Hoàn thành' : 'Đang làm'}
+                        size="small"
+                        color={cc.GioRa ? 'success' : 'warning'}
+                      />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </TableContainer>

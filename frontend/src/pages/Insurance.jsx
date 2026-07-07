@@ -144,7 +144,7 @@ const Insurance = () => {
               <TableRow sx={{ '& th': { fontWeight: 700, bgcolor: 'action.hover' } }}>
                 <TableCell>Mã BH</TableCell>
                 <TableCell>Nhân viên</TableCell>
-                <TableCell>Loại BH</TableCell>
+                <TableCell>Loại bảo hiểm</TableCell>
                 <TableCell>Ngày hết hạn</TableCell>
                 <TableCell align="center">Thao tác</TableCell>
               </TableRow>

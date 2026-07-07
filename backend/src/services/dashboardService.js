@@ -206,16 +206,16 @@ const getStats = async (user) => {
     raw: true,
   });
 
-  // Hợp đồng sắp hết hạn (trong 30 ngày tới)
+  // Hợp đồng đã/sắp hết hạn: quá hạn hoặc còn ≤ 30 ngày
   const next30 = new Date();
   next30.setDate(next30.getDate() + 30);
   const hopDongSapHH = await HopDong.findAll({
     where: {
-      NgayHH: { [Op.between]: [today, next30.toISOString().split('T')[0]] },
+      NgayHH: { [Op.lte]: next30.toISOString().split('T')[0] },
     },
     include: [{ model: NhanVien, as: 'nhanVien', attributes: ['TenNV', 'MaPB'] }],
-    order: [['NgayHH', 'ASC']],
-    limit: 5,
+    order: [['NgayHH', 'DESC']],
+    limit: 8,
   }).catch(() => []);
 
   // Nhân viên mới trong tháng (đếm qua HopDong NgayKy tháng này)

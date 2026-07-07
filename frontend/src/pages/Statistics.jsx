@@ -73,7 +73,7 @@ const TabDuAn = () => {
                 <CardContent sx={{ p: 3 }}>
                   <Typography fontWeight={700} mb={2}>Doanh thu vs Chi phí thực tế (theo dự án)</Typography>
                   <Box sx={{ display: 'flex', gap: 3, mb: 1.5, flexWrap: 'wrap' }}>
-                    {[{ color: '#6366f1', label: 'Doanh thu' }, { color: '#f59e0b', label: 'Chi phí TT' }, { color: '#10b981', label: 'Lợi nhuận' }].map((item) => (
+                    {[{ color: '#6366f1', label: 'Doanh thu' }, { color: '#f59e0b', label: 'Chi phí thực tế' }, { color: '#10b981', label: 'Lợi nhuận' }].map((item) => (
                       <Box key={item.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                         <Box sx={{ width: 12, height: 12, borderRadius: 1, bgcolor: item.color, flexShrink: 0 }} />
                         <Typography variant="caption" color="text.secondary">{item.label}</Typography>
@@ -87,7 +87,7 @@ const TabDuAn = () => {
                       <YAxis tickFormatter={(v) => `${(v / 1e6).toFixed(0)}M`} tick={{ fontSize: 11 }} />
                       <RechartsTooltip formatter={(v) => formatCurrency(v)} />
                       <Bar dataKey="DoanhThu" fill="#6366f1" name="Doanh thu" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="ChiPhiThucTe" fill="#f59e0b" name="Chi phí TT" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="ChiPhiThucTe" fill="#f59e0b" name="Chi phí thực tế" radius={[4, 4, 0, 0]} />
                       <Bar dataKey="LoiNhuan" fill="#10b981" name="Lợi nhuận" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -103,9 +103,9 @@ const TabDuAn = () => {
                   <TableRow sx={{ '& th': { fontWeight: 700, bgcolor: 'action.hover' } }}>
                     <TableCell>Dự án</TableCell>
                     <TableCell align="right">Doanh thu</TableCell>
-                    <TableCell align="right">Chi phí TT</TableCell>
+                    <TableCell align="right">Chi phí thực tế</TableCell>
                     <TableCell align="right">Lợi nhuận</TableCell>
-                    <TableCell align="right">Tiết kiệm CP</TableCell>
+                    <TableCell align="right">Tiết kiệm chi phí</TableCell>
                     <TableCell align="center">Nhân lực</TableCell>
                     <TableCell align="center">Thao tác</TableCell>
                   </TableRow>
@@ -251,7 +251,7 @@ const TabBangLuong = () => {
                   <TableRow sx={{ '& th': { fontWeight: 700, bgcolor: 'action.hover' } }}>
                     <TableCell>Nhân viên</TableCell>
                     <TableCell>Phòng ban</TableCell>
-                    <TableCell align="right">Lương CB</TableCell>
+                    <TableCell align="right">Lương cơ bản</TableCell>
                     <TableCell align="right">Phụ cấp</TableCell>
                     <TableCell align="right">Thuế TNCN</TableCell>
                     <TableCell align="right">Phí BH (10.5%)</TableCell>
@@ -409,9 +409,9 @@ const TabChenhLech = () => {
                     <TableRow sx={{ '& th': { fontWeight: 700, bgcolor: 'action.hover' } }}>
                       <TableCell>Tháng</TableCell>
                       <TableCell align="right" sx={{ color: '#10b981' }}>Doanh thu</TableCell>
-                      <TableCell align="right">CP dự án</TableCell>
-                      <TableCell align="right">Lương NV</TableCell>
-                      <TableCell align="right">CP hoạt động</TableCell>
+                      <TableCell align="right">Chi phí dự án</TableCell>
+                      <TableCell align="right">Lương nhân viên</TableCell>
+                      <TableCell align="right">Chi phí hoạt động</TableCell>
                       <TableCell align="right">Tổng chi phí tháng</TableCell>
                       <TableCell align="right">Số dư tích lũy</TableCell>
                     </TableRow>

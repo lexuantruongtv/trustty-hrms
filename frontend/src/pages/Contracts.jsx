@@ -149,7 +149,7 @@ const Contracts = () => {
               <TableRow sx={{ '& th': { fontWeight: 700, bgcolor: 'action.hover' } }}>
                 <TableCell>Số HĐ</TableCell>
                 <TableCell>Nhân viên</TableCell>
-                <TableCell>Loại HĐ</TableCell>
+                <TableCell>Loại hợp đồng</TableCell>
                 <TableCell>Ngày ký</TableCell>
                 <TableCell>Ngày hết hạn</TableCell>
                 <TableCell align="center">Thao tác</TableCell>

@@ -14,17 +14,39 @@ const getAll = async (query) => {
         `${query.nam}-${String(query.thang).padStart(2, '0')}-31`,
       ],
     };
+  } else if (query.nam) {
+    where.Ngay = {
+      [Op.between]: [`${query.nam}-01-01`, `${query.nam}-12-31`],
+    };
   }
+
+  // Lọc trạng thái: diTre | hoanThanh | dangLam
+  if (query.trangThai === 'diTre') {
+    where.GioVao = { [Op.gt]: '08:00:00' };
+  } else if (query.trangThai === 'hoanThanh') {
+    where.GioRa = { [Op.ne]: null };
+  } else if (query.trangThai === 'dangLam') {
+    where.GioRa = null;
+  }
+
+  // Filter NV theo tên hoặc phòng ban
+  const nhanVienWhere = {};
+  if (query.tenNV) nhanVienWhere.TenNV = { [Op.like]: `%${query.tenNV}%` };
+  if (query.MaPB) nhanVienWhere.MaPB = query.MaPB;
+
   const data = await ChamCong.findAndCountAll({
     where, limit, offset,
     include: [{
-      model: NhanVien, as: 'nhanVien', attributes: ['TenNV', 'Avatar'],
+      model: NhanVien, as: 'nhanVien',
+      attributes: ['TenNV', 'Avatar', 'MaPB'],
+      where: Object.keys(nhanVienWhere).length ? nhanVienWhere : undefined,
+      required: Object.keys(nhanVienWhere).length > 0,
       include: [
         { model: ChucVu, as: 'chucVu', attributes: ['TenCV'] },
         { model: PhongBan, as: 'phongBan', attributes: ['TenPB'] },
       ],
     }],
-    order: [['Ngay', 'DESC']],
+    order: [['Ngay', 'DESC'], ['GioVao', 'ASC']],
   });
   return getPagingData(data, page, limit);
 };

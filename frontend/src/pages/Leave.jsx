@@ -2,18 +2,22 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box, Card, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   TablePagination, Button, IconButton, Dialog, DialogTitle, DialogContent,
-  DialogActions, TextField, Tooltip, Avatar, Typography, Chip,
+  DialogActions, TextField, InputAdornment, Tooltip, Avatar, Typography, Chip,
+  FormControl, InputLabel, Select, MenuItem,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SearchIcon from '@mui/icons-material/Search';
 import { useForm, Controller } from 'react-hook-form';
 import { getLeaves, createLeave, approveLeave, rejectLeave, deleteLeave } from '../api/leave';
+import { getDepartments } from '../api/departments';
 import PageHeader from '../components/common/PageHeader';
 import StatusChip from '../components/common/StatusChip';
 import EmptyState from '../components/common/EmptyState';
 import useToast from '../hooks/useToast';
+import useDebounce from '../hooks/useDebounce';
 import useAuthStore from '../store/authStore';
 import { formatDate, getInitials } from '../utils/format';
 
@@ -50,17 +54,43 @@ const Leave = () => {
   const [data, setData] = useState({ items: [], total: 0 });
   const [page, setPage] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [departments, setDepartments] = useState([]);
   const canApprove = ['Admin', 'TruongPhong'].includes(user?.PhanQuyen);
+  const isEmployee = !['Admin', 'Ketoan', 'TruongPhong', 'HR', 'Manager'].includes(user?.PhanQuyen);
+
+  // Filter states
+  const [search, setSearch] = useState('');
+  const [filterPB, setFilterPB] = useState('');
+  const [filterTrangThai, setFilterTrangThai] = useState('');
+  const [filterNam, setFilterNam] = useState('');
+  const debouncedSearch = useDebounce(search);
+
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
+
+  useEffect(() => {
+    if (!isEmployee) {
+      getDepartments()
+        .then((r) => {
+          const list = r.data.data?.items || r.data.data || r.data || [];
+          setDepartments(Array.isArray(list) ? list : []);
+        })
+        .catch(() => {});
+    }
+  }, [isEmployee]);
 
   const fetchData = useCallback(async () => {
     try {
       const params = { page: page + 1, limit: 10 };
-      // Admin, Ketoan, TruongPhong xem tất cả
-      if (!['Admin', 'Ketoan', 'TruongPhong'].includes(user?.PhanQuyen)) params.MaNV1 = user.MaNV1;
+      if (isEmployee) params.MaNV1 = user.MaNV1;
+      if (debouncedSearch && !isEmployee) params.tenNV = debouncedSearch;
+      if (filterPB) params.MaPB = filterPB;
+      if (filterTrangThai) params.TrangThai = filterTrangThai;
+      if (filterNam) params.nam = filterNam;
       const res = await getLeaves(params);
       setData(res.data.data);
     } catch { }
-  }, [page, user]);
+  }, [page, user, isEmployee, debouncedSearch, filterPB, filterTrangThai, filterNam]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -96,6 +126,50 @@ const Leave = () => {
       <PageHeader title="Nghỉ phép" subtitle={`${data.total} đơn`}
         action={<Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>Tạo đơn</Button>}
       />
+
+      {/* Filter section */}
+      {!isEmployee && (
+        <Card sx={{ mb: 3, p: 2 }}>
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+            <TextField
+              placeholder="Tìm kiếm nhân viên..."
+              size="small"
+              sx={{ minWidth: 240 }}
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment>
+                ),
+              }}
+            />
+            <FormControl size="small" sx={{ minWidth: 180 }}>
+              <InputLabel>Phòng ban</InputLabel>
+              <Select value={filterPB} label="Phòng ban" onChange={(e) => { setFilterPB(e.target.value); setPage(0); }}>
+                <MenuItem value="">Tất cả</MenuItem>
+                {departments.map((d) => <MenuItem key={d.MaPB} value={d.MaPB}>{d.TenPB}</MenuItem>)}
+              </Select>
+            </FormControl>
+            <FormControl size="small" sx={{ minWidth: 150 }}>
+              <InputLabel>Trạng thái</InputLabel>
+              <Select value={filterTrangThai} label="Trạng thái" onChange={(e) => { setFilterTrangThai(e.target.value); setPage(0); }}>
+                <MenuItem value="">Tất cả</MenuItem>
+                <MenuItem value="Chờ duyệt">Chờ duyệt</MenuItem>
+                <MenuItem value="Đã duyệt">Đã duyệt</MenuItem>
+                <MenuItem value="Từ chối">Từ chối</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl size="small" sx={{ minWidth: 110 }}>
+              <InputLabel>Năm</InputLabel>
+              <Select value={filterNam} label="Năm" onChange={(e) => { setFilterNam(e.target.value); setPage(0); }}>
+                <MenuItem value="">Tất cả</MenuItem>
+                {years.map((y) => <MenuItem key={y} value={y}>{y}</MenuItem>)}
+              </Select>
+            </FormControl>
+          </Box>
+        </Card>
+      )}
+
       <Card>
         <TableContainer>
           <Table>
@@ -129,8 +203,8 @@ const Leave = () => {
                   </TableCell>
                   <TableCell>{formatDate(np.NgayBD)}</TableCell>
                   <TableCell>{formatDate(np.NgayKT)}</TableCell>
-                  <TableCell sx={{ maxWidth: 200 }}>
-                    <Typography variant="body2" noWrap>{np.LyDo}</Typography>
+                  <TableCell>
+                    <Typography variant="body2">{np.LyDo}</Typography>
                   </TableCell>
                   <TableCell><StatusChip status={np.TrangThai} /></TableCell>
                   <TableCell align="center">

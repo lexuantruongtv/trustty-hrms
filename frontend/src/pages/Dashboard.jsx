@@ -84,6 +84,8 @@ const ProjectProgressCard = ({ duAns = [] }) => (
 /* ── Hợp đồng sắp hết hạn ──────────────────────────────────────────────── */
 const HopDongSapHHCard = ({ items = [] }) => {
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   const daysLeft = (dateStr) => {
     const diff = new Date(dateStr) - today;
     return Math.ceil(diff / (1000 * 60 * 60 * 24));
@@ -105,40 +107,38 @@ const HopDongSapHHCard = ({ items = [] }) => {
             <Typography color="text.secondary" variant="body2">Không có hợp đồng sắp hết hạn</Typography>
           </Box>
         ) : (
-          <List dense disablePadding>
-            {items.map((h, i) => {
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+            {items.map((h) => {
               const days = daysLeft(h.NgayHH);
+              const isExpired = days < 0;
+              const isUrgent = days >= 0 && days <= 7;
+              const chipColor = isExpired ? '#ef4444' : isUrgent ? '#f59e0b' : '#3b82f6';
+              const chipLabel = isExpired ? `Quá hạn ${Math.abs(days)}n` : days === 0 ? 'Hôm nay' : `${days} ngày`;
               return (
-                <React.Fragment key={h.SoHD}>
-                  {i > 0 && <Divider component="li" />}
-                  <ListItem disableGutters sx={{ py: 1 }}>
-                    <ListItemAvatar sx={{ minWidth: 40 }}>
-                      <Avatar sx={{ width: 32, height: 32, bgcolor: days <= 7 ? '#ef444420' : '#f59e0b20' }}>
-                        <AssignmentIcon sx={{ fontSize: 16, color: days <= 7 ? '#ef4444' : '#f59e0b' }} />
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={<Typography variant="body2" fontWeight={600}>{h.TenNV}</Typography>}
-                      secondary={
-                        <Typography variant="caption" color="text.secondary">
-                          {h.LoaiHD} · Hết hạn: {formatDate(h.NgayHH)}
-                        </Typography>
-                      }
-                    />
-                    <Chip
-                      label={days <= 0 ? 'Hết hạn' : `${days} ngày`}
-                      size="small"
-                      sx={{
-                        bgcolor: days <= 7 ? '#ef444415' : '#f59e0b15',
-                        color: days <= 7 ? '#ef4444' : '#f59e0b',
-                        fontWeight: 700, fontSize: 11,
-                      }}
-                    />
-                  </ListItem>
-                </React.Fragment>
+                <Box key={h.SoHD} sx={{
+                  display: 'flex', alignItems: 'center', gap: 1.5,
+                  border: '1px solid', borderColor: `${chipColor}40`,
+                  borderRadius: 2, px: 2, py: 1.25,
+                  bgcolor: `${chipColor}08`,
+                  minWidth: 240, flex: '1 1 240px',
+                }}>
+                  <Avatar sx={{ width: 32, height: 32, bgcolor: `${chipColor}20`, flexShrink: 0 }}>
+                    <AssignmentIcon sx={{ fontSize: 16, color: chipColor }} />
+                  </Avatar>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography variant="body2" fontWeight={600} noWrap>{h.TenNV}</Typography>
+                    <Typography variant="caption" color="text.secondary" noWrap>
+                      {h.LoaiHD} · HH: {formatDate(h.NgayHH)}
+                    </Typography>
+                  </Box>
+                  <Chip label={chipLabel} size="small" sx={{
+                    bgcolor: `${chipColor}15`, color: chipColor,
+                    fontWeight: 700, fontSize: 11, flexShrink: 0,
+                  }} />
+                </Box>
               );
             })}
-          </List>
+          </Box>
         )}
       </CardContent>
     </Card>
@@ -461,13 +461,15 @@ const Dashboard = () => {
               </Grid>
 
               {/* Row 2 */}
-              <Grid item xs={12} md={5}>
+              <Grid item xs={12} md={6}>
                 <ChartNVPB data={stats.nvTheoPB || []} />
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid item xs={12} md={6}>
                 <ProjectProgressCard duAns={stats.duAnDangChay || []} />
               </Grid>
-              <Grid item xs={12} md={3}>
+
+              {/* Row 3 */}
+              <Grid item xs={12}>
                 <HopDongSapHHCard items={stats.hopDongSapHH || []} />
               </Grid>
             </Grid>

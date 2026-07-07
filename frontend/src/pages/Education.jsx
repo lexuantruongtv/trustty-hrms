@@ -154,7 +154,7 @@ const Education = () => {
                 <TableCell>Bằng cấp</TableCell>
                 <TableCell>Chuyên ngành</TableCell>
                 <TableCell>Nơi đào tạo</TableCell>
-                <TableCell>Năm HT</TableCell>
+                <TableCell>Năm hoàn thành</TableCell>
                 <TableCell align="center">Thao tác</TableCell>
               </TableRow>
             </TableHead>

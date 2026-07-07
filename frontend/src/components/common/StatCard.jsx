@@ -7,9 +7,10 @@ const StatCard = ({ title, value, icon, color = '#6366f1', trend, index = 0 }) =
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.4, delay: index * 0.1 }}
+    style={{ height: '100%' }}
   >
     <Card sx={{ height: '100%' }}>
-      <CardContent sx={{ p: 3 }}>
+      <CardContent sx={{ p: 3, minHeight: 120 }}>
         <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <Box>
             <Typography variant="body2" color="text.secondary" fontWeight={500} gutterBottom>
