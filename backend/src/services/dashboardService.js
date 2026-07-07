@@ -120,18 +120,10 @@ const getStats = async (user) => {
     const duAnDangChay = await DuAn.findAll({
       where: { TrangThai: 'Đang thực hiện' },
       attributes: ['MaDOAN', 'TenDA', 'TienDo', 'NgayKT'],
-      include: [{
-        model: NhanVien,
-        as: 'nhanViens',
-        where: { MaNV1: { [Op.in]: maNVList } },
-        attributes: [],
-        through: { attributes: [] },
-        required: true,
-      }],
       limit: 5,
       raw: true,
     }).catch(() => []);
-
+    
     const nghiPhep6Thang = await NghiPhep.findAll({
       attributes: [
         [sequelize.fn('MONTH', sequelize.col('NgayBD')), 'thang'],
@@ -209,14 +201,35 @@ const getStats = async (user) => {
   // Hợp đồng đã/sắp hết hạn: quá hạn hoặc còn ≤ 30 ngày
   const next30 = new Date();
   next30.setDate(next30.getDate() + 30);
-  const hopDongSapHH = await HopDong.findAll({
-    where: {
-      NgayHH: { [Op.lte]: next30.toISOString().split('T')[0] },
-    },
-    include: [{ model: NhanVien, as: 'nhanVien', attributes: ['TenNV', 'MaPB'] }],
-    order: [['NgayHH', 'DESC']],
-    limit: 8,
-  }).catch(() => []);
+// Lấy tất cả hợp đồng mới -> cũ
+const tatCaHopDong = await HopDong.findAll({
+  include: [{
+    model: NhanVien,
+    as: 'nhanVien',
+    attributes: ['TenNV', 'MaPB'],
+  }],
+  order: [
+    ['MaNV1', 'ASC'],
+    ['NgayKy', 'DESC'],   // Hợp đồng mới nhất đứng trước
+  ],
+});
+
+// Chỉ giữ hợp đồng mới nhất của mỗi nhân viên
+const latestContracts = [];
+const daXuLy = new Set();
+
+for (const hd of tatCaHopDong) {
+  if (!daXuLy.has(hd.MaNV1)) {
+    daXuLy.add(hd.MaNV1);
+    latestContracts.push(hd);
+  }
+}
+
+// Chỉ lấy hợp đồng mới nhất nhưng sắp hết hạn
+const hopDongSapHH = latestContracts
+  .filter(hd => new Date(hd.NgayHH) <= next30)
+  .sort((a, b) => new Date(a.NgayHH) - new Date(b.NgayHH))
+  .slice(0, 8);
 
   // Nhân viên mới trong tháng (đếm qua HopDong NgayKy tháng này)
   const nvMoiThang = await HopDong.count({

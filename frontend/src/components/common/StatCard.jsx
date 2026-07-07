@@ -16,7 +16,7 @@ const StatCard = ({ title, value, icon, color = '#6366f1', trend, index = 0 }) =
             <Typography variant="body2" color="text.secondary" fontWeight={500} gutterBottom>
               {title}
             </Typography>
-            <Typography variant="h4" fontWeight={700} sx={{ color }}>
+            <Typography fontWeight={700} sx={{ color, fontSize: 'clamp(1.0rem, 2vw, 2.5rem)', lineHeight: 1.15}}>
               {value}
             </Typography>
             {trend && (
