@@ -113,7 +113,7 @@ const HopDongSapHHCard = ({ items = [] }) => {
               const isExpired = days < 0;
               const isUrgent = days >= 0 && days <= 7;
               const chipColor = isExpired ? '#ef4444' : isUrgent ? '#f59e0b' : '#3b82f6';
-              const chipLabel = isExpired ? `Quá hạn ${Math.abs(days)}n` : days === 0 ? 'Hôm nay' : `${days} ngày`;
+              const chipLabel = isExpired ? `Quá hạn ${Math.abs(days)} ngày` : days === 0 ? 'Hôm nay' : `${days} ngày`;
               return (
                 <Box key={h.SoHD} sx={{
                   display: 'flex', alignItems: 'center', gap: 1.5,
